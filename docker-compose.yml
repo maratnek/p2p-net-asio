@@ -1,0 +1,33 @@
+version: '3'
+services:
+  node1:
+    image: 'ubuntu:latest'
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    volumes:
+      - ./build/bin/node-network:/app
+      - ./config1.json/:/app/config1.json
+    # command: ls /app 
+    command: ./app/node-network config1.json
+    networks:
+      - my_network
+  # node2:
+    # image: 'ubuntu:latest'
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    # command: ["./build/bin/node-network", "config2.json"]
+  # node3:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: ["./node", "config_node3.json"]
+  # node4:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: ["./node", "config_node4.json"]
+
+networks:
+  my_network:
