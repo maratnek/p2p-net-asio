@@ -1,4 +1,6 @@
 {
     "NodeName": "Node2",
-    "Address": "tcp://127.0.0.1:5556"
+    "Address": "127.0.0.1",
+    "Port": "5556",
+    "Peers": [{"addr":"127.0.0.1", "port":5555}]
 }

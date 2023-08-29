@@ -3,17 +3,34 @@ services:
   node1:
     image: 'ubuntu:latest'
     # build:
-    #   context: .
+      # context: ./
     #   dockerfile: Dockerfile
     volumes:
-      - ./build/bin/node-network:/app
-      - ./config1.json/:/app/config1.json
-    # command: ls /app 
-    command: ./app/node-network config1.json
-    networks:
-      - my_network
-  # node2:
-    # image: 'ubuntu:latest'
+      - ./config1.json:/app/config.json
+      - ./build/bin/p2p-test:/app/p2p-test
+      # - ./config2.json:/app
+    # command: ls /app
+    command: ./app/p2p-test ./app/config.json
+    ports:
+      - 5555:5555
+    network_mode: host
+    # networks:
+      # - my_network
+  node2:
+    image: 'ubuntu:latest'
+    volumes:
+      - ./config2.json:/app/config.json
+      - ./build/bin/p2p-test:/app/p2p-test
+      # - ./config2.json:/app
+    # command: ls /app
+    command: ./app/p2p-test ./app/config.json
+    ports:
+      - 5556:5556
+    depends_on:
+      - node1
+    network_mode: host
+    # networks:
+      # - my_network
     # build:
     #   context: .
     #   dockerfile: Dockerfile
@@ -29,5 +46,5 @@ services:
   #     dockerfile: Dockerfile
   #   command: ["./node", "config_node4.json"]
 
-networks:
-  my_network:
+# networks:
+  # my_network:

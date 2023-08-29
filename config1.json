@@ -1,4 +1,5 @@
 {
     "NodeName": "Node1",
-    "Address": "tcp://127.0.0.1:5555"
+    "Address": "127.0.0.1",
+    "Port": "5555"
 }
