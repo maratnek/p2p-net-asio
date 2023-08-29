@@ -28,10 +28,10 @@ int main(int argc, char** argv) try {
         auto t = argv[2];
         node.ConnectToNode("127.0.0.1", std::stoi(t));
     }
-    // if (argc >= 4) {
-    //     auto t = argv[3];
-    //     node.ConnectToNode("127.0.0.1", std::stoi(t));
-    // }
+    if (argc >= 4) {
+        auto t = argv[3];
+        node.ConnectToNode("127.0.0.1", std::stoi(t));
+    }
 
     std::cout << "Running... " << std::endl;
     std::thread t([&ioContext]()

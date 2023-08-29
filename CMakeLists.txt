@@ -79,9 +79,14 @@ target_link_libraries(${PROJECT_NAME}
         CONAN_PKG::boost
 )
 
-
 add_executable(echo-server echo-server.cpp)
 target_link_libraries(echo-server 
+        CONAN_PKG::boost
+)
+
+add_executable(p2p-test p2p-test.cpp)
+target_link_libraries(p2p-test 
+        CONAN_PKG::rapidjson
         CONAN_PKG::boost
 )
 
