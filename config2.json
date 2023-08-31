@@ -2,5 +2,5 @@
     "NodeName": "Node2",
     "Address": "127.0.0.1",
     "Port": "5556",
-    "Peers": [{"addr":"127.0.0.1", "port":5555}]
+    "Peers": [{"addr":"127.0.0.1", "port":5555}, {"addr":"127.0.0.1", "port":5557}]
 }

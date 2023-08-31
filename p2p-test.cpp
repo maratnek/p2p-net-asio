@@ -26,7 +26,7 @@ int main(int argc, char** argv) try {
     {
         sPort = config["Port"];
     }
-
+    
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
     std::cout << "listening port: " << port << std::endl;
     boost::asio::io_context ioc;
@@ -35,13 +35,25 @@ int main(int argc, char** argv) try {
     
     std::cout << "Connecting..." << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(2));
+
     auto sPeers = conf->getPeers();
     for (const auto &p : sPeers) {
         std::cout << "Connect to Peer: " << p.first << " : " << p.second << std::endl;
         server.Connect(ioc, p.first, p.second);
     }
 
-    ioc.run();
+    std::cout << "Running... " << std::endl;
+    std::thread t([&ioc]()
+                  { ioc.run(); });
+
+    std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
+
+    while (true) {
+        server.do_write_all("Hello from node:" + sPort + "!");
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+
+    t.join();
 
 } catch (std::exception const& e) {
     std::cout << "Exception was thrown in function: " << e.what() << std::endl;

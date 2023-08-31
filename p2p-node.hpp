@@ -18,65 +18,62 @@ class Server
 {
 public:
     Server(boost::asio::io_context &ioContext, const std::string &address, unsigned short port)
-        : m_address(address)
-        , m_port(port)
-        , m_acceptor(ioContext, tcp::endpoint(tcp::v4(), port))
-        , m_listeningSocket(ioContext)
+        : m_address(address), m_port(port), m_acceptor(ioContext, tcp::endpoint(tcp::v4(), port)), m_listeningSocket(ioContext)
     {
         m_acceptor.listen(m_port);
         this->DoAccept();
     }
 
-    // void SendMessage(tcp::socket const& _socket, const std::string& message) {
-    //     boost::asio::async_write(_socket, boost::asio::buffer(message),
-    //                              [this, message, &_socket](boost::system::error_code ec, std::size_t  bytesTransferred) {
-    //                                  if (!ec) {
-    //                                      std::cout << "Message sended " << message << std::endl;
-    //                                      StartReceiving(_socket);
-    //                                  } else {
-    //                                     std::cout << "Error sending message: " << ec.message() << std::endl;
-    //                                  }
-    //                              });
-    // }
-
-    // void StartReceiving(tcp::socket const& _socket) {
-    //     boost::asio::async_read_until(_socket, m_receiveBuffer, '\n',
-    //                                   [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred) {
-    //                                       if (!ec) {
-    //                                           std::istream is(&m_receiveBuffer);
-    //                                           std::string receivedMessage;
-    //                                           std::getline(is, receivedMessage);
-    //                                           std::cout << "Node: " << " Received: " << receivedMessage << std::endl;
-    //                                           StartReceiving(_socket); // Continue receiving
-    //                                       } else {
-    //                                         std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
-    //                                       }
-    //                                   });
-    // }
-    void do_write(tcp::socket& _socket, std::string mes) {
-        std::cout << "------------do write------------" << std::endl; 
-        boost::asio::async_write(_socket, boost::asio::buffer(mes + "\n"),
-                                 [this, mes, &_socket](boost::system::error_code ec, std::size_t  bytesTransferred) {
-                                     if (!ec) {
-                                         std::cout << "Message sended " << mes << std::endl;
+    void do_write(tcp::socket &_socket, std::string const &mes)
+    {
+        std::cout << "------------do write------------" << std::endl;
+        boost::asio::async_write(_socket, boost::asio::buffer(mes),
+                                 [this, mes, &_socket](boost::system::error_code ec, std::size_t bytesTransferred)
+                                 {
+                                     if (!ec)
+                                     {
+                                         std::cout << "Transf bytest: " << bytesTransferred << " Message sended " << mes << std::endl;
                                          do_read(_socket);
-                                     } else {
-                                        std::cout << "Error sending message: " << ec.message() << std::endl;
+                                     }
+                                     else
+                                     {
+                                         std::cout << "Error sending message: " << ec.message() << std::endl;
                                      }
                                  });
     }
-    void do_read(tcp::socket& _socket) {
+
+    void do_write_all(std::string mes)
+    {
+        for (tcp::socket &s : m_sockets)
+        {
+            this->do_write(s, mes);
+        }
+    }
+
+    void do_read(tcp::socket &_socket)
+    {
         std::cout << "------------do read------------" << std::endl;
         boost::asio::async_read_until(_socket, m_receiveBuffer, '\n',
                                       [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred)
                                       {
                                           std::cout << "------------lamda read------------" << std::endl;
+                                          std::cout << "Bytest transf to read buffer: " << bytesTransferred << std::endl;
                                           if (!ec)
                                           {
-                                              std::istream is(&m_receiveBuffer);
-                                              std::string receivedMessage;
-                                              std::getline(is, receivedMessage);
-                                              std::cout << "Node: " << " Received: " << receivedMessage << std::endl;
+                                              if (bytesTransferred > 0)
+                                              {
+                                                  std::string receivedMessage;
+                                                  std::istream is(&m_receiveBuffer);
+                                                  std::getline(is, receivedMessage);
+
+                                                  std::cout << "Node: "
+                                                            << "N Received: " << receivedMessage << std::endl;
+                                              }
+                                              else
+                                              {
+                                                  std::cout << "Node: "
+                                                            << "N Received O bytes " << std::endl;
+                                              }
                                               do_read(_socket); // Continue receiving
                                           }
                                           else
@@ -86,10 +83,9 @@ public:
                                       });
     }
 
-
     void Connect(boost::asio::io_context &ioContext, const std::string &targetAddress, short unsigned targetPort)
     {
-        std::cout << "------------do connect------------" << std::endl; 
+        std::cout << "------------do connect------------" << std::endl;
 
         auto &conn = m_sockets.emplace_back(m_acceptor.get_executor());
         // auto &conn = m_sockets.emplace_back(boost::asio::ip::tcp::socket(ioContext));
@@ -107,43 +103,31 @@ public:
                                     std::cout << "Connected to server " << conn.remote_endpoint() << std::endl;
 
                                     std::string data = "Hello from node port is: " + std::to_string(m_port);
-                                    do_write(conn, data);
+                                    // do_write(conn, data);
                                 }
                                 else
                                 {
                                     std::cout << "Failed to connect to " << endpoint << ": " << ec.message() << std::endl;
-                                } 
-                            });
+                                } });
 
-        return;
+        // boost::asio::io_service io_service;
+        // boost::asio::ip::tcp::resolver resolver(io_service);
+        // boost::asio::ip::tcp::resolver::results_type endpoints =
+        //     resolver.resolve(targetAddress, std::to_string(targetPort));
 
-        //     boost::asio::io_service io_service;
-        //     boost::asio::ip::tcp::resolver resolver(ioContext);
-        //     try
-        //     {
-        //         boost::asio::ip::tcp::resolver::results_type endpoints =
-        //             resolver.resolve(targetAddress, std::to_string(targetPort));
+        // boost::asio::async_connect(socket, endpoints,
+        //                            [this, &socket](boost::system::error_code ec, const boost::asio::ip::tcp::endpoint &endpoint)
+        //                            {
+        //                                 if (!ec) {
+        //                                     std::cout << "Connected to server " << socket.remote_endpoint() << std::endl;
 
-        //         boost::asio::async_connect(socketConnection, endpoints,
-        //                                    [this, &socket](boost::system::error_code ec, const boost::asio::ip::tcp::endpoint &endpoint)
-        //                                    {
-        //                                        if (!ec)
-        //                                        {
-        //                                            std::cout << "Connected to target node." << endpoint << std::endl;
-        //                                            //    m_sockets.emplace_back(std::move(socket));
-        //                                            do_write(m_listeningSocket, "Hello from node ");
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            std::cout << "ERROR: " << ec.message() << std::endl;
-        //                                        }
-        //                                    });
-
-        // }
-        // catch (std::exception const &ex)
-        // {
-        //     std::cerr << "Exception: " << ex.what() << std::endl;
-        // }
+        //                                     std::string data = "Hello from node port is: " + std::to_string(m_port);
+        //                                     do_write(socket, data);
+        //                                 }
+        //                                 else
+        //                                 {
+        //                                     std::cout << "Failed to connect to " << endpoint << ": " << ec.message() << std::endl;
+        //                                 } });
     }
 
 private:
@@ -155,8 +139,8 @@ private:
                 if (!errc)
                 {
                     auto endpoint = socket.remote_endpoint();
-                    std::cout << "Accepted connection from: " << endpoint.address()  << ":" << endpoint.port()
-                    << " list s: " << m_sockets.size() << std::endl;
+                    std::cout << "Accepted connection from: " << endpoint.address() << ":" << endpoint.port()
+                              << " list s: " << m_sockets.size() << std::endl;
                     m_sockets.emplace_back(std::move(socket));
                     do_read(m_sockets.back());
                 }
@@ -179,7 +163,6 @@ private:
 
     tcp::socket m_listeningSocket;
 };
-
 
 /*
 class Server {
