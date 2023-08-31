@@ -1,16 +1,5 @@
-#include "p2p-node.hpp"
+#include "server.hpp"
 #include "config.hpp"
-
-#include <csignal>
-
-#include <atomic>
-
-    std::atomic<int> count = 0;
-
-void signal_handler(int signal_num) {
-        std::cout << "Receive message: " << count << std::endl;
-        exit(signal_num);
-    }
 
 int main(int argc, char** argv) try {
 
@@ -40,35 +29,25 @@ int main(int argc, char** argv) try {
     
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
     std::cout << "listening port: " << port << std::endl;
+
     boost::asio::io_context ioc;
     Server server(ioc, "127.0.0.1", port);
 
-    
     std::cout << "Connecting..." << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
     auto sPeers = conf->getPeers();
     for (const auto &p : sPeers) {
         std::cout << "Connect to Peer: " << p.first << " : " << p.second << std::endl;
-        server.Connect(ioc, p.first, p.second);
+        server.connect(p.first, p.second);
     }
 
-    std::cout << "Running... " << std::endl;
     std::thread t([&ioc]()
                   { ioc.run(); });
-    
-
-    // register signal SIGABRT and signal handler
-    signal(SIGINT, signal_handler);
-    
-    server.receive([](std::string msg){
-        std::cout << count++ << " Receive: " << msg << std::endl;
-    });
 
     std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
-
     while (true) {
-        server.do_write_all("Hello from node:" + sPort + "!\n");
+        server.sendToAll("Hello from node:" + sPort + "!");
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 

@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <list>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -20,8 +21,12 @@ public:
     Server(boost::asio::io_context &ioContext, const std::string &address, unsigned short port)
         : m_address(address), m_port(port), m_acceptor(ioContext, tcp::endpoint(tcp::v4(), port)), m_listeningSocket(ioContext)
     {
+        m_buffer.reserve(1024);
         m_acceptor.listen(m_port);
         this->DoAccept();
+    }
+    ~Server() {
+        std::cout << "Destruct Server " << m_port << std::endl;
     }
 
     void do_write(tcp::socket &_socket, std::string const &mes)
@@ -50,6 +55,10 @@ public:
         }
     }
 
+    void receive(std::function<void(std::string)> callback) {
+        m_receiveCallback = callback;
+    }
+
     void do_read(tcp::socket &_socket)
     {
         std::cout << "------------do read------------" << std::endl;
@@ -66,6 +75,7 @@ public:
                                                   std::istream is(&m_receiveBuffer);
                                                   std::getline(is, receivedMessage);
 
+                                            m_receiveCallback(receivedMessage);
                                                   std::cout << "Node: "
                                                             << "N Received: " << receivedMessage << std::endl;
                                               }
@@ -74,13 +84,41 @@ public:
                                                   std::cout << "Node: "
                                                             << "N Received O bytes " << std::endl;
                                               }
-                                              do_read(_socket); // Continue receiving
                                           }
                                           else
                                           {
                                               std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
                                           }
+                                          do_read(_socket); // Continue receiving
                                       });
+        // _socket.async_read_some(boost::asio::buffer(m_buffer),
+        //                         [this, &_socket](const boost::system::error_code &ec, std::size_t bytesTransferred)
+        //                         {
+        //                             // std::cout << "------------lamda read------------" << std::endl;
+        //                             // std::cout << "Bytest transf to read buffer: " << bytesTransferred << std::endl;
+        //                             if (!ec)
+        //                             {
+        //                                 if (bytesTransferred > 0)
+        //                                 {
+        //                                     std::string receivedMessage(m_buffer.begin(), m_buffer.begin() + bytesTransferred);
+
+        //                                     std::cout << "Node: "
+        //                                               << "N Received: " << receivedMessage << std::endl;
+        //                                     m_receiveCallback(receivedMessage);
+        //                                     do_read(_socket); // Continue receiving
+        //                                 }
+        //                                 else
+        //                                 {
+        //                                     // std::cout << "Node: "
+        //                                             //   << "N Received O bytes " << std::endl;
+        //                                 }
+        //                             }
+        //                             else
+        //                             {
+        //                                 std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
+        //                             }
+        //                         });
+
     }
 
     void Connect(boost::asio::io_context &ioContext, const std::string &targetAddress, short unsigned targetPort)
@@ -104,6 +142,7 @@ public:
 
                                     std::string data = "Hello from node port is: " + std::to_string(m_port);
                                     // do_write(conn, data);
+                                    do_read(conn);
                                 }
                                 else
                                 {
@@ -162,6 +201,10 @@ private:
     std::list<tcp::socket> m_sockets;
 
     tcp::socket m_listeningSocket;
+
+    std::vector<char> m_buffer;
+
+    std::function<void(std::string)> m_receiveCallback;
 };
 
 /*

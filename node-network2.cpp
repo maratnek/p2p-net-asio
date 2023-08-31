@@ -40,10 +40,10 @@ int main(int argc, char** argv) try {
     std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
 
     std::cout << "Send message " << std::endl;
-    node.SendMessage("Hello from node:" + port + "!\n");
+    node.SendMessage("Hello from node:" + port + "!");
     // node.StartReceiving();
     while (true) {
-        node.SendMessage("Hello from node:" + port + "!\n");
+        node.SendMessage("Hello from node:" + port + "!");
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 

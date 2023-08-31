@@ -65,6 +65,7 @@ public:
         boost::asio::async_read_until(_socket, receiveBuffer_, '\n',
                                       [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred) {
                                           if (!ec) {
+                                            std::cout << "Reading buffer size " << bytesTransferred << std::endl;
                                               std::istream is(&receiveBuffer_);
                                               std::string receivedMessage;
                                               std::getline(is, receivedMessage);
