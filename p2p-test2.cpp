@@ -30,8 +30,7 @@ int main(int argc, char** argv) try {
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
     std::cout << "listening port: " << port << std::endl;
 
-    boost::asio::io_context ioc;
-    Server server(ioc, "127.0.0.1", port);
+    Server server("127.0.0.1", port);
 
     std::cout << "Connecting..." << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -42,16 +41,14 @@ int main(int argc, char** argv) try {
         server.connect(p.first, p.second);
     }
 
-    std::thread t([&ioc]()
-                  { ioc.run(); });
+    server.runServer();
 
     std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
     while (true) {
-        server.sendToAll("Hello from node:" + sPort + "!");
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        server.sendToAll("Hello from node:" + sPort + "!\n");
+        // std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }
-
-    t.join();
 
 } catch (std::exception const& e) {
     std::cout << "Exception was thrown in function: " << e.what() << std::endl;

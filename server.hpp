@@ -3,176 +3,245 @@
 
 #include <boost/asio.hpp>
 
-#include <memory>
-#include <thread>
 #include <iostream>
 #include <list>
-
+#include <memory>
+#include <thread>
 
 using namespace std::chrono_literals;
 using boost::asio::ip::tcp;
 
 /// \class Session
-class Session
-{
+class Session : public std::enable_shared_from_this<Session> {
 public:
-
   Session(tcp::socket socket)
-    : m_socket(std::move(socket))
-  {}
+      : m_socket(std::move(socket)), m_receiveBuffer(1024) {}
 
   Session() = delete;
-  Session(Session const&) = delete;
-  Session(Session &&session) noexcept
-    : m_socket(std::move(session.m_socket))
-  {
-  }
+  Session(Session const &) = delete;
+  Session(Session &&session) = delete;
 
   ~Session() {}
 
-  void start()
-  {
-    this->receiving();
+  void start() { this->receiving(); }
+
+  void sendMessage(std::string mes) {
+    auto self(shared_from_this());
+    // std::cout << "------------send message------------" << std::endl;
+    if (m_socket.is_open()) {
+      // std::cout << "Socket is open" << std::endl;
+    } else {
+      std::cout << "Socket closed" << std::endl;
+      return;
+    }
+    boost::asio::async_write(m_socket, boost::asio::buffer(mes),
+                             [this, self, mes](boost::system::error_code ec,
+                                               std::size_t bytesTransferred) {
+                               if (!ec) {
+                                 //  std::cout << "Message sended " << mes << "
+                                 //  Bytes: " << bytesTransferred << std::endl;
+                                 //  this->receiving();
+                               } else {
+                                 std::cout << "Error sending message: "
+                                           << ec.message() << std::endl;
+                               }
+                             });
   }
 
-    void sendMessage(std::string const& mes)
-    {
-    std::cout << "------------send message------------" << std::endl;
-    boost::asio::async_write(m_socket, boost::asio::buffer(mes),
-                             [this, mes](boost::system::error_code ec, std::size_t bytesTransferred)
-                             {
-                                 if (!ec)
-                                 {
-                                     std::cout << "Message sended " << mes << " Bytes: " << bytesTransferred << std::endl;
-                                    //  do_read(_socket);
-                                 }
-                                 else
-                                 {
-                                     std::cout << "Error sending message: " << ec.message() << std::endl;
-                                 }
-                             });
-    }
+  void addReceiveHandler(std::function<void(std::string message)> lamda) {
+    m_receiveHandler = lamda;
+  }
 
 private:
-  void receiving()
-  {
-        std::cout << "------------receiving------------" << std::endl;
-        boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
-                                      [this](boost::system::error_code ec, std::size_t bytesTransferred)
-                                      {
-                                          std::cout << "------------lamda read------------" << std::endl;
-                                          std::cout << "Bytest transf to read buffer: " << bytesTransferred << std::endl;
-                                          if (!ec)
-                                          {
-                                              std::istream is(&m_receiveBuffer);
-                                              std::string receivedMessage;
-                                              std::getline(is, receivedMessage);
-                                              std::cout << "Node: " << " Received: " << receivedMessage << std::endl;
-                                              this->receiving(); // Continue receiving
-                                          }
-                                          else
-                                          {
-                                              std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
-                                          }
-                                      });
-    }
+  void receiving() {
+    auto self(shared_from_this());
+    if (!m_socket.is_open())
+      return;
+    // std::cout << "------------receiving------------" << std::endl;
+    boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
+                                  [this, self](boost::system::error_code ec,
+                                               std::size_t bytesTransferred) {
+                                    //   std::cout << "------------lamda
+                                    //   read------------" << std::endl;
+                                    //   std::cout << "Bytes transf to read
+                                    //   buffer: " << bytesTransferred <<
+                                    //   std::endl;
+                                    if (!ec) {
+                                      std::istream is(&m_receiveBuffer);
+                                      std::string receivedMessage;
+                                      std::getline(is, receivedMessage);
+                                      std::cout
+                                          << "Node: "
+                                          << " Received: " << receivedMessage
+                                          << std::endl;
+                                      if (m_receiveHandler != nullptr) {
+                                        m_receiveHandler(receivedMessage);
+                                      }
+                                    } else {
+                                      //   std::cout << "ERROR Node Er Val:" <<
+                                      //   ec.value() << ":" << ec.message() <<
+                                      //   std::endl;
+                                    }
+                                    this->receiving(); // Continue receiving
+                                  });
+
+    // boost::asio::async_read(m_socket, m_receiveBuffer,
+    // boost::asio::transfer_at_least(1024),
+    //                               [this, self](boost::system::error_code ec,
+    //                               std::size_t bytesTransferred) mutable
+    //                               {
+    //                                   std::cout << "------------lamda
+    //                                   read------------" << std::endl;
+    //                                   std::cout << "Bytest transf to read
+    //                                   buffer: " << bytesTransferred <<
+    //                                   std::endl; if (!ec)
+    //                                   {
+    //                                       if (bytesTransferred > 0)
+    //                                       {
+    //                                           std::string receivedMessage;
+    //                                           std::istream
+    //                                           is(&m_receiveBuffer);
+    //                                           std::getline(is,
+    //                                           receivedMessage);
+
+    //                                         //
+    //                                         m_receiveCallback(receivedMessage);
+    //                                           std::cout << "Node: "
+    //                                                     << "N Received: " <<
+    //                                                     receivedMessage <<
+    //                                                     std::endl;
+    //                                       }
+    //                                       else
+    //                                       {
+    //                                           std::cout << "Node: "
+    //                                                     << "N Received O
+    //                                                     bytes " << std::endl;
+    //                                       }
+    //                                   }
+    //                                   else
+    //                                   {
+    //                                       std::cout << "ERROR Node Er Val:"
+    //                                       << ec.value() << ":" <<
+    //                                       ec.message() << std::endl;
+    //                                   }
+    //                                   this->receiving(); // Continue
+    //                                   receiving
+    //                               });
+  }
 
 private:
-
   tcp::socket m_socket;
   boost::asio::streambuf m_receiveBuffer;
+
+  std::function<void(std::string message)> m_receiveHandler = nullptr;
 };
-
-
 
 /// \class Server consisting of sessions with connection
 /// \
 
-class Server
-{
+class Server {
+    Server() = delete; //
+    Server(Server const &) = delete; //
 public:
-    Server(boost::asio::io_context &ioContext, const std::string &address, unsigned short port)
-        : m_address(address)
-        , m_port(port)
-        // , m_io_context(boost::asio::io_context{})
-        , m_acceptor(ioContext, tcp::endpoint(tcp::v4(), port))
-    {
+//   Server(boost::asio::io_context &ioContext, const std::string &address, unsigned short port)
+  Server(const std::string &address, unsigned short port)
+      : m_address(address)
+      , m_port(port)
+      , m_acceptor(m_io_context, tcp::endpoint(tcp::v4(), port))
+  {
+      m_acceptor.listen(m_port);
+      accept();
+  }
 
-        m_acceptor.listen(m_port);
-        this->doAccept();
-
-        std::cout << "Running... " << std::endl;
-        // m_thread = std::move(std::thread([this]()
-                //  { m_io_context.run(); }));
+  ~Server() {
+    if (m_thread.joinable()) {
+      m_thread.join();
     }
+  }
 
-    ~Server()
-    {
-        // if (m_thread.joinable()) {
-            // m_thread.join();
-        // }
-    }
+  void connect(const std::string &targetAddress, short unsigned targetPort) {
+    std::cout << "------------do connect------------" << std::endl;
 
-    void connect(const std::string &targetAddress, short unsigned targetPort)
-    {
-        std::cout << "------------do connect------------" << std::endl; 
+    auto &socket = m_sockets.emplace_back(m_acceptor.get_executor());
 
-        auto socket = tcp::socket(m_acceptor.get_executor());
-        auto& session = m_sessions.emplace_back(std::move(Session{std::move(socket)}));
-        boost::asio::ip::tcp::endpoint endpoint(
-           boost::asio::ip::address::from_string(targetAddress), targetPort);
-        socket.async_connect(endpoint, [this, &session](boost::system::error_code ec)
-                           {
-                                if (!ec) {
-                                    std::cout << "Connected to server " <<  std::endl;
-                                    session.start();
-                                    // std::string data = "Hello from node port is: " + std::to_string(m_port);
-                                    // do_write(socket, data);
-                                }
-                                else
-                                {
-                                    std::cout << "Failed to connect to " <<  ": " << ec.message() << std::endl;
-                                } 
-                            });
+    boost::asio::ip::tcp::endpoint endpoint(
+        // boost::asio::ip::address::from_string(targetAddress), targetPort);
+        {}, targetPort);
 
-    }
+    socket.async_connect(endpoint, [this](boost::system::error_code ec) {
+      if (!ec) {
+        std::cout << "Connected to server " << std::endl;
+        auto session = std::make_shared<Session>(std::move(m_sockets.back()));
+        session->start();
+        m_sessions.emplace_back(session);
+      } else {
+        std::cout << "Failed to connect to "
+                  << ": " << ec.message() << std::endl;
+      }
+    });
+  }
 
-    void sendToAll(std::string const& message) {
-        for (auto & session : m_sessions) {
-            session.sendMessage(message);
+  void runServer() {
+    std::cout << "Running... " << std::endl;
+    // m_thread = 
+    auto t = std::thread([this]() {
+      for (;;) {
+        try {
+            std::cout << "Server run " << std::endl;
+          m_io_context.run();
+          break; // run() exited normally
+        } catch (std::exception &e) {
+          // Deal with exception as appropriate.
+          std::cerr << e.what() << std::endl;
         }
+      }
+    });
+    std::swap(m_thread, t);
+  }
+
+  void sendToAll(std::string const &message) {
+    for (auto &session : m_sessions) {
+      session->sendMessage(message);
     }
+  }
+
+  // add received handler
+  void addReceiveHandler(std::function<void(std::string message)> lamda) {
+    for (auto &session : m_sessions) {
+      session->addReceiveHandler(lamda);
+    }
+  }
 
 private:
-  void doAccept()
-  {
+  void accept() {
     m_acceptor.async_accept(
-        [this](boost::system::error_code ec, tcp::socket socket)
-        {
-          if (!ec)
-          {
-                    auto endpoint = socket.remote_endpoint();
-                    std::cout << "Accepted connection from: " << endpoint.address()  << ":" << endpoint.port()
-                    << " list s: " << m_sessions.size() << std::endl;
-              Session session{std::move(socket)};
-              session.start();
-              m_sessions.emplace_back(std::move(session));
+        [this](boost::system::error_code ec, tcp::socket socket) {
+          if (!ec) {
+            auto endpoint = socket.remote_endpoint();
+            std::cout << "Accepted connection from: " << endpoint.address()
+                      << ":" << endpoint.port()
+                      << " list s: " << m_sessions.size() << std::endl;
+
+            auto session = std::make_shared<Session>(std::move(socket));
+            session->start();
+            m_sessions.emplace_back(session);
           }
 
-          doAccept();
+          accept();
         });
   }
 
 private:
-    std::string m_address;
-    unsigned short m_port = 0;
+  boost::asio::io_context m_io_context{};
+  std::string m_address;
+  unsigned short m_port = 0;
 
   tcp::acceptor m_acceptor;
-  std::list<Session> m_sessions;
+  std::list<std::shared_ptr<Session>> m_sessions;
 
-//   boost::asio::io_context m_io_context;
-//   std::thread m_thread;
+  std::list<tcp::socket> m_sockets;
+
+  std::thread m_thread;
 };
-
 
 #endif // __SERVER__HPP__
