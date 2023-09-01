@@ -31,7 +31,7 @@ public:
     if (m_socket.is_open()) {
       // std::cout << "Socket is open" << std::endl;
     } else {
-      std::cout << "Socket closed" << std::endl;
+      // std::cout << "Socket closed" << std::endl;
       return;
     }
     boost::asio::async_write(m_socket, boost::asio::buffer(mes),
@@ -58,75 +58,67 @@ private:
     if (!m_socket.is_open())
       return;
     // std::cout << "------------receiving------------" << std::endl;
-    boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
-                                  [this, self](boost::system::error_code ec,
-                                               std::size_t bytesTransferred) {
-                                    //   std::cout << "------------lamda
-                                    //   read------------" << std::endl;
-                                    //   std::cout << "Bytes transf to read
-                                    //   buffer: " << bytesTransferred <<
-                                    //   std::endl;
-                                    if (!ec) {
-                                      std::istream is(&m_receiveBuffer);
-                                      std::string receivedMessage;
-                                      std::getline(is, receivedMessage);
-                                      std::cout
-                                          << "Node: "
-                                          << " Received: " << receivedMessage
-                                          << std::endl;
-                                      if (m_receiveHandler != nullptr) {
-                                        m_receiveHandler(receivedMessage);
-                                      }
-                                    } else {
-                                      //   std::cout << "ERROR Node Er Val:" <<
-                                      //   ec.value() << ":" << ec.message() <<
-                                      //   std::endl;
-                                    }
-                                    this->receiving(); // Continue receiving
-                                  });
-
-    // boost::asio::async_read(m_socket, m_receiveBuffer,
-    // boost::asio::transfer_at_least(1024),
+    // boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
     //                               [this, self](boost::system::error_code ec,
-    //                               std::size_t bytesTransferred) mutable
-    //                               {
-    //                                   std::cout << "------------lamda
-    //                                   read------------" << std::endl;
-    //                                   std::cout << "Bytest transf to read
-    //                                   buffer: " << bytesTransferred <<
-    //                                   std::endl; if (!ec)
-    //                                   {
-    //                                       if (bytesTransferred > 0)
-    //                                       {
-    //                                           std::string receivedMessage;
-    //                                           std::istream
-    //                                           is(&m_receiveBuffer);
-    //                                           std::getline(is,
-    //                                           receivedMessage);
-
-    //                                         //
-    //                                         m_receiveCallback(receivedMessage);
-    //                                           std::cout << "Node: "
-    //                                                     << "N Received: " <<
-    //                                                     receivedMessage <<
-    //                                                     std::endl;
-    //                                       }
-    //                                       else
-    //                                       {
-    //                                           std::cout << "Node: "
-    //                                                     << "N Received O
-    //                                                     bytes " << std::endl;
-    //                                       }
+    //                                            std::size_t bytesTransferred) {
+    //                                 //   std::cout << "------------lamda
+    //                                 //   read------------" << std::endl;
+    //                                 //   std::cout << "Bytes transf to read
+    //                                 //   buffer: " << bytesTransferred <<
+    //                                 //   std::endl;
+    //                                 if (!ec) {
+    //                                   std::istream is(&m_receiveBuffer);
+    //                                   std::string receivedMessage;
+    //                                   std::getline(is, receivedMessage);
+    //                                   std::cout
+    //                                       << "Node: "
+    //                                       << " Received: " << receivedMessage
+    //                                       << std::endl;
+    //                                   if (m_receiveHandler != nullptr) {
+    //                                     m_receiveHandler(receivedMessage);
     //                                   }
-    //                                   else
-    //                                   {
-    //                                       std::cout << "ERROR Node Er Val:"
-    //                                       << ec.value() << ":" <<
-    //                                       ec.message() << std::endl;
-    //                                   }
-    //                                   this->receiving(); // Continue
-    //                                   receiving
+    //                                 } else {
+    //                                   //   std::cout << "ERROR Node Er Val:" <<
+    //                                   //   ec.value() << ":" << ec.message() <<
+    //                                   //   std::endl;
+    //                                 }
+    //                                 this->receiving(); // Continue receiving
     //                               });
+
+    boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_at_least(1024),
+                                  [this, self](boost::system::error_code ec, std::size_t bytesTransferred)
+                                  {
+                                      std::cout << "------------lamda read------------" << std::endl;
+                                      std::cout << "Bytest transf to readbuffer: " << bytesTransferred << std::endl;
+                                      if (!ec)
+                                      {
+                                          if (bytesTransferred > 0)
+                                          {
+                                              std::string receivedMessage;
+                                              std::istream
+                                              is(&m_receiveBuffer);
+                                              std::getline(is, receivedMessage);
+
+                                              if (m_receiveHandler != nullptr)
+                                              {
+                                                m_receiveHandler(receivedMessage);
+                                              }
+                                      std::cout << "Node: "
+                                                << "N Received: " << receivedMessage << std::endl;
+                                          }
+                                          else
+                                          {
+                                            std::cout << "Node: N Received O bytes " << std::endl;
+                                          }
+                                      }
+                                      else
+                                      {
+                                          std::cout << "ERROR Node Er Val:"
+                                          << ec.value() << ":" <<
+                                          ec.message() << std::endl;
+                                      }
+                                      receiving();
+                                  });
   }
 
 private:

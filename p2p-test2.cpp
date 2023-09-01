@@ -44,8 +44,14 @@ int main(int argc, char** argv) try {
     server.runServer();
 
     std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
+
+    // for (size_t i = 0; i < 1000; i++)
+    // {
+    //     server.sendToAll("Id: " + std::to_string(i) + " Hello from node:" + sPort + "!");
+    // }
+    
     while (true) {
-        server.sendToAll("Hello from node:" + sPort + "!\n");
+        server.sendToAll("Hello from node:" + sPort + "!");
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }
