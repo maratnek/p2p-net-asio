@@ -11,6 +11,8 @@ using namespace std::chrono_literals;
 
 using boost::asio::ip::tcp;
 
+#include <mutex>
+constexpr size_t m_buffer_size = 512;
 class Session
 {
 };
@@ -20,6 +22,8 @@ class Server
 public:
     Server(boost::asio::io_context &ioContext, const std::string &address, unsigned short port)
         : m_address(address), m_port(port), m_acceptor(ioContext, tcp::endpoint(tcp::v4(), port)), m_listeningSocket(ioContext)
+        , m_receiveBuffer(m_buffer_size)
+        // , _receiveBuffer(std::make_shared<boost::asio::streambuf>(m_buffer_size))
     {
         m_buffer.reserve(1024);
         m_acceptor.listen(m_port);
@@ -62,8 +66,38 @@ public:
     void do_read(tcp::socket &_socket)
     {
         std::cout << "------------do read------------" << std::endl;
-        boost::asio::async_read_until(_socket, m_receiveBuffer, '\n',
-                                      [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred)
+        // boost::asio::async_read_until(_socket, m_receiveBuffer, '\n',
+        //                               [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred)
+        //                               {
+        //                                   std::cout << "------------lamda read------------" << std::endl;
+        //                                   std::cout << "Bytest transf to read buffer: " << bytesTransferred << std::endl;
+        //                                   if (!ec)
+        //                                   {
+        //                                       if (bytesTransferred > 0)
+        //                                       {
+        //                                           std::string receivedMessage;
+        //                                           std::istream is(&m_receiveBuffer);
+        //                                           std::getline(is, receivedMessage);
+
+        //                                     m_receiveCallback(receivedMessage);
+        //                                           std::cout << "Node: "
+        //                                                     << "N Received: " << receivedMessage << std::endl;
+        //                                       }
+        //                                       else
+        //                                       {
+        //                                           std::cout << "Node: "
+        //                                                     << "N Received O bytes " << std::endl;
+        //                                       }
+        //                                   }
+        //                                   else
+        //                                   {
+        //                                       std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
+        //                                   }
+        //                                   do_read(_socket); // Continue receiving
+        //                               });
+
+        boost::asio::async_read(_socket, m_receiveBuffer, boost::asio::transfer_at_least(m_buffer_size),
+                                      [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred) mutable
                                       {
                                           std::cout << "------------lamda read------------" << std::endl;
                                           std::cout << "Bytest transf to read buffer: " << bytesTransferred << std::endl;
@@ -72,10 +106,12 @@ public:
                                               if (bytesTransferred > 0)
                                               {
                                                   std::string receivedMessage;
+                                                  std::unique_lock lock(m_mutex);
                                                   std::istream is(&m_receiveBuffer);
                                                   std::getline(is, receivedMessage);
+                                                  lock.unlock();
 
-                                            m_receiveCallback(receivedMessage);
+                                                  m_receiveCallback(receivedMessage);
                                                   std::cout << "Node: "
                                                             << "N Received: " << receivedMessage << std::endl;
                                               }
@@ -91,6 +127,7 @@ public:
                                           }
                                           do_read(_socket); // Continue receiving
                                       });
+
         // _socket.async_read_some(boost::asio::buffer(m_buffer),
         //                         [this, &_socket](const boost::system::error_code &ec, std::size_t bytesTransferred)
         //                         {
@@ -205,6 +242,8 @@ private:
     std::vector<char> m_buffer;
 
     std::function<void(std::string)> m_receiveCallback;
+
+    std::mutex m_mutex;
 };
 
 /*
