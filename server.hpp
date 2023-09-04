@@ -34,7 +34,7 @@ public:
       // std::cout << "Socket closed" << std::endl;
       return;
     }
-    boost::asio::async_write(m_socket, boost::asio::buffer(mes),
+    boost::asio::async_write(m_socket, boost::asio::buffer(mes + '\n'),
                              [this, self, mes](boost::system::error_code ec,
                                                std::size_t bytesTransferred) {
                                if (!ec) {
@@ -82,10 +82,11 @@ private:
     //                                   //   ec.value() << ":" << ec.message() <<
     //                                   //   std::endl;
     //                                 }
-    //                                 this->receiving(); // Continue receiving
+    //                                 receiving(); // Continue receiving
     //                               });
 
-    boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_at_least(1024),
+    // boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_at_least(1024),
+    boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_all(),
                                   [this, self](boost::system::error_code ec, std::size_t bytesTransferred)
                                   {
                                       std::cout << "------------lamda read------------" << std::endl;
@@ -95,16 +96,16 @@ private:
                                           if (bytesTransferred > 0)
                                           {
                                               std::string receivedMessage;
-                                              std::istream
-                                              is(&m_receiveBuffer);
+                                              std::istream is(&m_receiveBuffer);
                                               std::getline(is, receivedMessage);
+                                              m_receiveBuffer.consume(bytesTransferred);
 
                                               if (m_receiveHandler != nullptr)
                                               {
                                                 m_receiveHandler(receivedMessage);
                                               }
-                                      std::cout << "Node: "
-                                                << "N Received: " << receivedMessage << std::endl;
+                                              std::cout << "Node: "
+                                                        << "N Received: " << receivedMessage << std::endl;
                                           }
                                           else
                                           {
@@ -124,6 +125,8 @@ private:
 private:
   tcp::socket m_socket;
   boost::asio::streambuf m_receiveBuffer;
+
+  boost::array<char, 128> buf;
 
   std::function<void(std::string message)> m_receiveHandler = nullptr;
 };
