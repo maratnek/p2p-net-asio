@@ -30,26 +30,36 @@ int main(int argc, char** argv) try {
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
     std::cout << "listening port: " << port << std::endl;
 
-    Server server("127.0.0.1", port);
-    server.runServer();
+    Server p2p_server("127.0.0.1", port);
+    Server clinets_server("127.0.0.1", port + 50);
 
-    auto targetAddress = "127.0.0.1";
-    auto targetPort = 5555+50;
 
+    clinets_server.addReceiveHandler([&](std::string mes){
+        std::cout << "Client send message!!! " << mes << std::endl;
+        // handle the message and send it to all peers
+        p2p_server.sendToAll("Send to ALL" + mes);
+    });
+
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     std::cout << "Connecting..." << std::endl;
-    server.connect(targetAddress, targetPort);
-
-    std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
-
-    for (size_t i = 0; i < 10; i++)
-    {
-        // TODO it should be send only to one Node
-        server.sendToAll("Id: " + std::to_string(i) + " Hello from node:" + sPort + "!");
+    auto sPeers = conf->getPeers();
+    for (const auto &p : sPeers) {
+        std::cout << "Connect to Peer: " << p.first << " : " << p.second << std::endl;
+        p2p_server.connect(p.first, p.second);
     }
-    
+
+
+    p2p_server.runServer();
+    clinets_server.runServer();
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    p2p_server.sendToAll("First message to all. For testing purposes");
+
+
     // auto counter = 0;
     // while (true) {
-    //     server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
+    //     p2p_server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
     //     // std::this_thread::sleep_for(std::chrono::seconds(2));
     //     std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     // }

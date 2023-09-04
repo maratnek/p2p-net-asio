@@ -1,0 +1,72 @@
+p2p-net-asio-node2-1  | Address: 127.0.0.1
+p2p-net-asio-node2-1  | NodeName: Node2
+p2p-net-asio-node2-1  | Port: 5556
+p2p-net-asio-node2-1  | listening port: 5556
+p2p-net-asio-node2-1  | Connecting...
+p2p-net-asio-node2-1  | Connect to Peer: 127.0.0.1 : 5555
+p2p-net-asio-node2-1  | ------------do connect------------
+p2p-net-asio-node2-1  | Connect to Peer: 127.0.0.1 : 5557
+p2p-net-asio-node2-1  | ------------do connect------------
+p2p-net-asio-node2-1  | Running... 
+p2p-net-asio-node2-1  | Running... 
+p2p-net-asio-node2-1  | Server run 5556
+p2p-net-asio-node3-1  | Address: 127.0.0.1
+p2p-net-asio-node3-1  | NodeName: Node3
+p2p-net-asio-node3-1  | Port: 5557
+p2p-net-asio-node2-1  | Server run 5606
+p2p-net-asio-node2-1  | Accepted connection from remote endp: 127.0.0.1:40658 local endpoint: 5556 list s: 0
+p2p-net-asio-node2-1  | ------------receiving------------
+p2p-net-asio-node2-1  | Receive handler is ready
+p2p-net-asio-node2-1  | Connected to server 
+p2p-net-asio-node2-1  | ------------receiving------------
+p2p-net-asio-node2-1  | Receive handler is ready
+p2p-net-asio-node2-1  | Connected to server 
+p2p-net-asio-node2-1  | Receive handler is ready
+p2p-net-asio-node2-1  | Accepted connection from remote endp: 127.0.0.1:40668 local endpoint: 5556 list s: 3
+p2p-net-asio-node2-1  | ------------receiving------------
+p2p-net-asio-node2-1  | Receive handler is ready
+p2p-net-asio-node1-1  | Address: 127.0.0.1
+p2p-net-asio-node3-1  | listening port: 5557
+p2p-net-asio-node3-1  | Connecting...
+p2p-net-asio-node3-1  | Connect to Peer: 127.0.0.1 : 5555
+p2p-net-asio-node3-1  | ------------do connect------------
+p2p-net-asio-node3-1  | Connect to Peer: 127.0.0.1 : 5556
+p2p-net-asio-node3-1  | ------------do connect------------
+p2p-net-asio-node3-1  | Running... 
+p2p-net-asio-node3-1  | Running... 
+p2p-net-asio-node3-1  | Server run 5557
+p2p-net-asio-node3-1  | Server run 5607
+p2p-net-asio-node3-1  | Accepted connection from remote endp: 127.0.0.1:48996 local endpoint: 5557 list s: 0
+p2p-net-asio-node3-1  | ------------receiving------------
+p2p-net-asio-node3-1  | Receive handler is ready
+p2p-net-asio-node3-1  | Connected to server 
+p2p-net-asio-node3-1  | ------------receiving------------
+p2p-net-asio-node3-1  | Receive handler is ready
+p2p-net-asio-node3-1  | Connected to server 
+p2p-net-asio-node3-1  | Receive handler is ready
+p2p-net-asio-node3-1  | Accepted connection from remote endp: 127.0.0.1:49000 local endpoint: 5557 list s: 3
+p2p-net-asio-node3-1  | ------------receiving------------
+p2p-net-asio-node3-1  | Receive handler is ready
+p2p-net-asio-node1-1  | NodeName: Node1
+p2p-net-asio-node1-1  | Port: 5555
+p2p-net-asio-node1-1  | listening port: 5555
+p2p-net-asio-node1-1  | Connecting...
+p2p-net-asio-node1-1  | Connect to Peer: 127.0.0.1 : 5556
+p2p-net-asio-node1-1  | ------------do connect------------
+p2p-net-asio-node1-1  | Connect to Peer: 127.0.0.1 : 5557
+p2p-net-asio-node1-1  | ------------do connect------------
+p2p-net-asio-node1-1  | Running... 
+p2p-net-asio-node1-1  | Running... 
+p2p-net-asio-node1-1  | Server run 5555
+p2p-net-asio-node1-1  | Server run 5605
+p2p-net-asio-node1-1  | Accepted connection from remote endp: 127.0.0.1:53242 local endpoint: 5555 list s: 0
+p2p-net-asio-node1-1  | ------------receiving------------
+p2p-net-asio-node1-1  | Receive handler is ready
+p2p-net-asio-node1-1  | Connected to server 
+p2p-net-asio-node1-1  | ------------receiving------------
+p2p-net-asio-node1-1  | Receive handler is ready
+p2p-net-asio-node1-1  | Connected to server 
+p2p-net-asio-node1-1  | Receive handler is ready
+p2p-net-asio-node1-1  | Accepted connection from remote endp: 127.0.0.1:53248 local endpoint: 5555 list s: 3
+p2p-net-asio-node1-1  | ------------receiving------------
+p2p-net-asio-node1-1  | Receive handler is ready

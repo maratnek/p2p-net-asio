@@ -2,6 +2,7 @@
 #define __SERVER__HPP__
 
 #include <boost/asio.hpp>
+#include <boost/array.hpp>
 
 #include <iostream>
 #include <list>
@@ -27,11 +28,11 @@ public:
 
   void sendMessage(std::string mes) {
     auto self(shared_from_this());
-    // std::cout << "------------send message------------" << std::endl;
     if (m_socket.is_open()) {
-      // std::cout << "Socket is open" << std::endl;
+      std::cout << "Socket is open" << std::endl;
+      std::cout << "Sending: remote endpoint " << m_socket.remote_endpoint() << std::endl;
     } else {
-      // std::cout << "Socket closed" << std::endl;
+      std::cout << "Socket closed" << std::endl;
       return;
     }
     boost::asio::async_write(m_socket, boost::asio::buffer(mes + '\n'),
@@ -49,76 +50,51 @@ public:
   }
 
   void addReceiveHandler(std::function<void(std::string message)> lamda) {
-    m_receiveHandler = lamda;
+    if (lamda != nullptr) {
+      std::cout << "Receive handler is ready" << std::endl;
+      m_receiveHandler = lamda;
+    }
+  }
+
+  bool isOpen() const{
+    return m_socket.is_open();
   }
 
 private:
   void receiving() {
     auto self(shared_from_this());
-    if (!m_socket.is_open())
-      return;
-    // std::cout << "------------receiving------------" << std::endl;
-    // boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
-    //                               [this, self](boost::system::error_code ec,
-    //                                            std::size_t bytesTransferred) {
-    //                                 //   std::cout << "------------lamda
-    //                                 //   read------------" << std::endl;
-    //                                 //   std::cout << "Bytes transf to read
-    //                                 //   buffer: " << bytesTransferred <<
-    //                                 //   std::endl;
-    //                                 if (!ec) {
-    //                                   std::istream is(&m_receiveBuffer);
-    //                                   std::string receivedMessage;
-    //                                   std::getline(is, receivedMessage);
-    //                                   std::cout
-    //                                       << "Node: "
-    //                                       << " Received: " << receivedMessage
-    //                                       << std::endl;
-    //                                   if (m_receiveHandler != nullptr) {
-    //                                     m_receiveHandler(receivedMessage);
-    //                                   }
-    //                                 } else {
-    //                                   //   std::cout << "ERROR Node Er Val:" <<
-    //                                   //   ec.value() << ":" << ec.message() <<
-    //                                   //   std::endl;
-    //                                 }
-    //                                 receiving(); // Continue receiving
-    //                               });
-
-    // boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_at_least(1024),
-    boost::asio::async_read(m_socket, m_receiveBuffer, boost::asio::transfer_all(),
-                                  [this, self](boost::system::error_code ec, std::size_t bytesTransferred)
+    if (!m_socket.is_open()) {
+      std::cout << "Socket is not open" << std::endl;
+    } else {
+      std::cout << "Socket is open" << std::endl;
+    }
+    std::cout << "------------receiving------------" << std::endl;
+    boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
+                                  [this, self](boost::system::error_code ec,
+                                               std::size_t bytesTransferred)
                                   {
-                                      std::cout << "------------lamda read------------" << std::endl;
-                                      std::cout << "Bytest transf to readbuffer: " << bytesTransferred << std::endl;
-                                      if (!ec)
+                                    std::cout << "------------lamda read------------" << std::endl;
+                                    std::cout << "Socket available: " << m_socket.available() << std::endl;
+                                    std::cout << "Bytes transf to read buffer: " << bytesTransferred << std::endl;
+                                    if (!ec)
+                                    {
+                                      std::istream is(&m_receiveBuffer);
+                                      std::string receivedMessage;
+                                      std::getline(is, receivedMessage);
+                                      std::cout
+                                          << "Node: "
+                                          << " Received: " << receivedMessage
+                                          << std::endl;
+                                      if (m_receiveHandler != nullptr)
                                       {
-                                          if (bytesTransferred > 0)
-                                          {
-                                              std::string receivedMessage;
-                                              std::istream is(&m_receiveBuffer);
-                                              std::getline(is, receivedMessage);
-                                              m_receiveBuffer.consume(bytesTransferred);
-
-                                              if (m_receiveHandler != nullptr)
-                                              {
-                                                m_receiveHandler(receivedMessage);
-                                              }
-                                              std::cout << "Node: "
-                                                        << "N Received: " << receivedMessage << std::endl;
-                                          }
-                                          else
-                                          {
-                                            std::cout << "Node: N Received O bytes " << std::endl;
-                                          }
+                                        m_receiveHandler(receivedMessage);
                                       }
-                                      else
-                                      {
-                                          std::cout << "ERROR Node Er Val:"
-                                          << ec.value() << ":" <<
-                                          ec.message() << std::endl;
-                                      }
-                                      receiving();
+                                    }
+                                    else
+                                    {
+                                      std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
+                                    }
+                                    receiving(); // Continue receiving
                                   });
   }
 
@@ -126,7 +102,8 @@ private:
   tcp::socket m_socket;
   boost::asio::streambuf m_receiveBuffer;
 
-  boost::array<char, 128> buf;
+  enum { max_length = 128 };
+  char data_[max_length];
 
   std::function<void(std::string message)> m_receiveHandler = nullptr;
 };
@@ -160,17 +137,22 @@ public:
     auto &socket = m_sockets.emplace_back(m_acceptor.get_executor());
 
     boost::asio::ip::tcp::endpoint endpoint(
-        // boost::asio::ip::address::from_string(targetAddress), targetPort);
-        {}, targetPort);
+        boost::asio::ip::address::from_string(targetAddress), targetPort);
+        // {}, targetPort);
 
-    socket.async_connect(endpoint, [this](boost::system::error_code ec) {
+    socket.async_connect(endpoint, [this, targetPort, &socket](boost::system::error_code ec) {
       if (!ec) {
-        std::cout << "Connected to server " << std::endl;
-        auto session = std::make_shared<Session>(std::move(m_sockets.back()));
-        session->start();
-        m_sessions.emplace_back(session);
+        if (socket.is_open()) 
+        {
+          auto session = std::make_shared<Session>(std::move(m_sockets.back()));
+          session->addReceiveHandler(m_receiveHandler);
+          session->start();
+          m_sessions.emplace_back(session);
+          std::cout << "Connected to server (port: " << targetPort << ")"
+                    << " list s: " << m_sessions.size() << std::endl;
+        }
       } else {
-        std::cout << "Failed to connect to "
+        std::cout << "Failed to connect to (port: " << targetPort << ")"
                   << ": " << ec.message() << std::endl;
       }
     });
@@ -182,7 +164,8 @@ public:
     auto t = std::thread([this]() {
       for (;;) {
         try {
-            std::cout << "Server run " << std::endl;
+            std::cout << "Server run " << m_port << std::endl;
+
           m_io_context.run();
           break; // run() exited normally
         } catch (std::exception &e) {
@@ -195,6 +178,7 @@ public:
   }
 
   void sendToAll(std::string const &message) {
+    std::cout << "Session size before send messages: " << m_sessions.size() << std::endl;
     for (auto &session : m_sessions) {
       session->sendMessage(message);
     }
@@ -202,9 +186,13 @@ public:
 
   // add received handler
   void addReceiveHandler(std::function<void(std::string message)> lamda) {
-    for (auto &session : m_sessions) {
-      session->addReceiveHandler(lamda);
+    if (lamda != nullptr) {
+      std::cout << "Add receive handler" << std::endl;
+      m_receiveHandler = lamda;
     }
+    // for (auto &session : m_sessions) {
+      // session->addReceiveHandler(lamda);
+    // }
   }
 
 private:
@@ -213,13 +201,20 @@ private:
         [this](boost::system::error_code ec, tcp::socket socket) {
           if (!ec) {
             auto endpoint = socket.remote_endpoint();
-            std::cout << "Accepted connection from: " << endpoint.address()
-                      << ":" << endpoint.port()
-                      << " list s: " << m_sessions.size() << std::endl;
+            auto lendp = socket.local_endpoint();
 
-            auto session = std::make_shared<Session>(std::move(socket));
-            session->start();
-            m_sessions.emplace_back(session);
+            if (socket.is_open()) {
+
+              auto session = std::make_shared<Session>(std::move(socket));
+
+              session->start();
+              session->addReceiveHandler(m_receiveHandler);
+              m_sessions.emplace_back(session);
+
+              std::cout << "Accepted connection from remote endp: " << endpoint.address()
+                        << ":" << endpoint.port() << " local endpoint: " << lendp.port()
+                        << " list s: " << m_sessions.size() << std::endl;
+            }
           }
 
           accept();
@@ -237,6 +232,8 @@ private:
   std::list<tcp::socket> m_sockets;
 
   std::thread m_thread;
+
+  std::function<void(std::string message)> m_receiveHandler = nullptr;
 };
 
 #endif // __SERVER__HPP__
