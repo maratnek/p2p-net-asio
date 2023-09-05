@@ -24,6 +24,19 @@ public:
 
   ~Session() {}
 
+      std::string getRemoteEndpoint() const {
+        try {
+            if (m_socket.is_open()) {
+                boost::asio::ip::tcp::endpoint remoteEndpoint = m_socket.remote_endpoint();
+                return remoteEndpoint.address().to_string() + ":" + std::to_string(remoteEndpoint.port());
+            } else {
+                return "Socket is not open";
+            }
+        } catch (const std::exception& e) {
+            return "Error retrieving remote endpoint: " + std::string(e.what());
+        }
+    }
+
   void start() { this->receiving(); }
 
   void sendMessage(std::string mes) {
@@ -39,9 +52,8 @@ public:
                              [this, self, mes](boost::system::error_code ec,
                                                std::size_t bytesTransferred) {
                                if (!ec) {
-                                 //  std::cout << "Message sended " << mes << "
-                                 //  Bytes: " << bytesTransferred << std::endl;
-                                 //  this->receiving();
+                                  std::cout << "Message sended " << mes << " Bytes: " << bytesTransferred << std::endl;
+                                  // this->receiving();
                                } else {
                                  std::cout << "Error sending message: "
                                            << ec.message() << std::endl;
@@ -54,10 +66,6 @@ public:
       std::cout << "Receive handler is ready" << std::endl;
       m_receiveHandler = lamda;
     }
-  }
-
-  bool isOpen() const{
-    return m_socket.is_open();
   }
 
 private:
@@ -131,36 +139,8 @@ public:
     }
   }
 
-  void connect(const std::string &targetAddress, short unsigned targetPort) {
-    std::cout << "------------do connect------------" << std::endl;
-
-    auto &socket = m_sockets.emplace_back(m_acceptor.get_executor());
-
-    boost::asio::ip::tcp::endpoint endpoint(
-        boost::asio::ip::address::from_string(targetAddress), targetPort);
-        // {}, targetPort);
-
-    socket.async_connect(endpoint, [this, targetPort, &socket](boost::system::error_code ec) {
-      if (!ec) {
-        if (socket.is_open()) 
-        {
-          auto session = std::make_shared<Session>(std::move(m_sockets.back()));
-          session->addReceiveHandler(m_receiveHandler);
-          session->start();
-          m_sessions.emplace_back(session);
-          std::cout << "Connected to server (port: " << targetPort << ")"
-                    << " list s: " << m_sessions.size() << std::endl;
-        }
-      } else {
-        std::cout << "Failed to connect to (port: " << targetPort << ")"
-                  << ": " << ec.message() << std::endl;
-      }
-    });
-  }
-
   void runServer() {
     std::cout << "Running... " << std::endl;
-    // m_thread = 
     auto t = std::thread([this]() {
       for (;;) {
         try {
@@ -170,7 +150,7 @@ public:
           break; // run() exited normally
         } catch (std::exception &e) {
           // Deal with exception as appropriate.
-          std::cerr << e.what() << std::endl;
+          std::cerr << "Failed run context: " << e.what() << std::endl;
         }
       }
     });
@@ -178,8 +158,15 @@ public:
   }
 
   void sendToAll(std::string const &message) {
-    std::cout << "Session size before send messages: " << m_sessions.size() << std::endl;
-    for (auto &session : m_sessions) {
+    std::cout << "Conn Sessions size before send messages: " << m_sessions_conn.size() << std::endl;
+    for (auto &session : m_sessions_conn) {
+      session->sendMessage(message);
+    }
+  }
+
+  void sendToAllAccepter(std::string const &message) {
+    std::cout << "Accepter Sessions size before send messages: " << m_sessions_accept.size() << std::endl;
+    for (auto &session : m_sessions_accept) {
       session->sendMessage(message);
     }
   }
@@ -190,36 +177,58 @@ public:
       std::cout << "Add receive handler" << std::endl;
       m_receiveHandler = lamda;
     }
-    // for (auto &session : m_sessions) {
-      // session->addReceiveHandler(lamda);
-    // }
+  }
+
+  void connect(const std::string &targetAddress, short unsigned targetPort) {
+    std::cout << "------------do connect------------" << std::endl;
+    auto &socket = m_sockets.emplace_back(m_acceptor.get_executor());
+
+    boost::asio::ip::tcp::endpoint endpoint(
+        boost::asio::ip::address::from_string(targetAddress), targetPort);
+        // {}, targetPort);
+
+    socket.async_connect(endpoint, [this, targetPort, &socket](boost::system::error_code ec) {
+      if (!ec) {
+          auto session = std::make_shared<Session>(std::move(socket));
+          session->addReceiveHandler(m_receiveHandler);
+          // session->start();
+          m_sessions_conn.emplace_back(session);
+          std::cout << "Success Connected to server (port: " << targetPort << ")"
+                    << " list conn s: " << m_sessions_conn.size() << std::endl;
+      } else {
+        std::cout << "Failed to connect to (port: " << targetPort << ")"
+                  << ": " << ec.message() << std::endl;
+      }
+    });
   }
 
 private:
   void accept() {
     m_acceptor.async_accept(
         [this](boost::system::error_code ec, tcp::socket socket) {
-          if (!ec) {
-            auto endpoint = socket.remote_endpoint();
-            auto lendp = socket.local_endpoint();
+            if (!ec) {
+                auto endpoint = socket.remote_endpoint();
+                auto lendp = socket.local_endpoint();
 
-            if (socket.is_open()) {
+                auto session = std::make_shared<Session>(std::move(socket));
 
-              auto session = std::make_shared<Session>(std::move(socket));
+                session->addReceiveHandler(m_receiveHandler);
+                m_sessions_accept.emplace_back(session);
+                session->start(); // Start the session here
 
-              session->start();
-              session->addReceiveHandler(m_receiveHandler);
-              m_sessions.emplace_back(session);
+                std::cout << "Accepted connection from remote endp: " << endpoint.address()
+                          << ":" << endpoint.port() << " local endpoint: " << lendp.port()
+                          << " list s: " << m_sessions_accept.size() << std::endl;
 
-              std::cout << "Accepted connection from remote endp: " << endpoint.address()
-                        << ":" << endpoint.port() << " local endpoint: " << lendp.port()
-                        << " list s: " << m_sessions.size() << std::endl;
+                // Log remote endpoint information again to double-check
+                std::cout << "Remote endpoint after accepting: " << session->getRemoteEndpoint() << std::endl;
+            } else {
+                std::cout << "Error accepting connection: " << ec.message() << std::endl;
             }
-          }
 
-          accept();
+            accept(); // Continue accepting connections
         });
-  }
+}
 
 private:
   boost::asio::io_context m_io_context{};
@@ -227,7 +236,8 @@ private:
   unsigned short m_port = 0;
 
   tcp::acceptor m_acceptor;
-  std::list<std::shared_ptr<Session>> m_sessions;
+  std::list<std::shared_ptr<Session>> m_sessions_conn;
+  std::list<std::shared_ptr<Session>> m_sessions_accept;
 
   std::list<tcp::socket> m_sockets;
 

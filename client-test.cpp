@@ -39,12 +39,12 @@ int main(int argc, char** argv) try {
     std::cout << "Connecting..." << std::endl;
     server.connect(targetAddress, targetPort);
 
-    std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
+    std::this_thread::sleep_for(std::chrono::seconds(2)); // Wait for a moment
 
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         // TODO it should be send only to one Node
-        server.sendToAll("Id: " + std::to_string(i) + " Hello from node:" + sPort + "!");
+        server.sendToAll("Id: " + std::to_string(i) + " Hello from Client with port :" + sPort + "!");
     }
     
     // auto counter = 0;

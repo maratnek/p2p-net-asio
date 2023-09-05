@@ -36,10 +36,14 @@ int main(int argc, char** argv) try {
 
     clinets_server.addReceiveHandler([&](std::string mes){
         std::cout << "Client send message!!! " << mes << std::endl;
+        clinets_server.sendToAllAccepter("PING FROM SERVER");
         // handle the message and send it to all peers
-        p2p_server.sendToAll("Send to ALL" + mes);
+        p2p_server.sendToAll("SEND TO ALL" + mes);
+        // send the response to client
+        clinets_server.sendToAllAccepter("SEND RESPONSE");
     });
 
+    p2p_server.runServer();
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
     std::cout << "Connecting..." << std::endl;
@@ -49,11 +53,11 @@ int main(int argc, char** argv) try {
         p2p_server.connect(p.first, p.second);
     }
 
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
-    p2p_server.runServer();
     clinets_server.runServer();
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     p2p_server.sendToAll("First message to all. For testing purposes");
 
 
