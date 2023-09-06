@@ -22,7 +22,9 @@ public:
   Session(Session const &) = delete;
   Session(Session &&session) = delete;
 
-  ~Session() {}
+  ~Session() {
+    m_socket.cancel();
+  }
 
       std::string getRemoteEndpoint() const {
         try {
@@ -71,12 +73,12 @@ public:
 private:
   void receiving() {
     auto self(shared_from_this());
+    std::cout << "------------receiving------------" << std::endl;
     if (!m_socket.is_open()) {
       std::cout << "Socket is not open" << std::endl;
     } else {
       std::cout << "Socket is open" << std::endl;
     }
-    std::cout << "------------receiving------------" << std::endl;
     boost::asio::async_read_until(m_socket, m_receiveBuffer, '\n',
                                   [this, self](boost::system::error_code ec,
                                                std::size_t bytesTransferred)
@@ -134,8 +136,12 @@ public:
   }
 
   ~Server() {
+    std::cout << "Server destructed" << std::endl;
     if (m_thread.joinable()) {
-      m_thread.join();
+      std::cout << "Join thread" << std::endl;
+      // m_io_context.stop();
+
+      m_thread.join(); 
     }
   }
 
@@ -144,9 +150,9 @@ public:
     auto t = std::thread([this]() {
       for (;;) {
         try {
-            std::cout << "Server run " << m_port << std::endl;
-
+          std::cout << "Server run " << m_port << std::endl;
           m_io_context.run();
+          std::cout << "Run exited" << std::endl;
           break; // run() exited normally
         } catch (std::exception &e) {
           // Deal with exception as appropriate.
@@ -191,7 +197,7 @@ public:
       if (!ec) {
           auto session = std::make_shared<Session>(std::move(socket));
           session->addReceiveHandler(m_receiveHandler);
-          // session->start();
+          session->start();
           m_sessions_conn.emplace_back(session);
           std::cout << "Success Connected to server (port: " << targetPort << ")"
                     << " list conn s: " << m_sessions_conn.size() << std::endl;

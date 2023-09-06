@@ -46,13 +46,15 @@ int main(int argc, char** argv) try {
         // TODO it should be send only to one Node
         server.sendToAll("Id: " + std::to_string(i) + " Hello from Client with port :" + sPort + "!");
     }
+
     
     // auto counter = 0;
-    // while (true) {
+    while (true) {
     //     server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
-    //     // std::this_thread::sleep_for(std::chrono::seconds(2));
+        // server.sendToAll("Id: " + std::to_string(counter++) + " Hello from Client with port :" + sPort + "!");
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     //     std::this_thread::sleep_for(std::chrono::nanoseconds(2));
-    // }
+    }
 
 } catch (std::exception const& e) {
     std::cout << "Exception was thrown in function: " << e.what() << std::endl;

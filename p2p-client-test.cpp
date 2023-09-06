@@ -64,7 +64,7 @@ int main(int argc, char** argv) try {
     // auto counter = 0;
     // while (true) {
     //     p2p_server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
-    //     // std::this_thread::sleep_for(std::chrono::seconds(2));
+        // std::this_thread::sleep_for(std::chrono::seconds(2));
     //     std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     // }
 
