@@ -1,7 +1,17 @@
 #include "server.hpp"
 #include "config.hpp"
 
+#include <logger.hpp>
+using namespace logger;
+
 int main(int argc, char** argv) try {
+
+
+    Logger::initialize();
+    // Logger::setLogLevel(LogLevel::INFO);
+
+    TRACE_LOG("P2P client test started");
+
 
     std::string address = "127.0.0.1";
     std::string sPort = "5000";
@@ -16,7 +26,7 @@ int main(int argc, char** argv) try {
     std::map<std::string, std::string> config = conf->getMainConfig();
     for (const auto &pair : config)
     {
-        std::cout << pair.first << ": " << pair.second << std::endl;
+        DEBUG_LOG(pair.first << ": " << pair.second);
     }
     if (config.contains("Address"))
     {
@@ -28,7 +38,7 @@ int main(int argc, char** argv) try {
     }
     
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
-    std::cout << "listening port: " << port << std::endl;
+    DEBUG_LOG("listening port: " << port);
 
     Server p2p_server("127.0.0.1", port);
     Server clinets_server("127.0.0.1", port + 50);
@@ -36,14 +46,14 @@ int main(int argc, char** argv) try {
     int id = 0;
 
     clinets_server.addReceiveHandler([&](std::string mes){
-        std::cout << "Client send message!!! " << mes << std::endl;
+        DEBUG_LOG("Client send message!!! " << mes);
         clinets_server.sendToAllAccepter("PING FROM SERVER");
         // handle the message and send it to all peers
         p2p_server.sendToAll("SEND TO ALL: " + mes);
     });
 
     p2p_server.addReceiveHandler([&](std::string mes) {
-        std::cout << "Client send message from P2P!!! " << mes << std::endl;
+        DEBUG_LOG("Client send message from P2P!!! " << mes);
         // send the response to client if p2p server receive message
         clinets_server.sendToAllAccepter("RECEIVE RESPONSE from p2p server: " + mes);
     });
@@ -51,10 +61,10 @@ int main(int argc, char** argv) try {
     p2p_server.runServer();
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    std::cout << "Connecting..." << std::endl;
+    DEBUG_LOG("Connecting...");
     auto sPeers = conf->getPeers();
     for (const auto &p : sPeers) {
-        std::cout << "Connect to Peer: " << p.first << " : " << p.second << std::endl;
+        DEBUG_LOG("Connect to Peer: " << p.first << " : " << p.second);
         p2p_server.connect(p.first, p.second);
     }
 
@@ -66,15 +76,13 @@ int main(int argc, char** argv) try {
     p2p_server.sendToAll("First message to all. For testing purposes");
 
 
-    // auto counter = 0;
     while (true) {
-    //     p2p_server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
         std::this_thread::sleep_for(std::chrono::seconds(2));
     //     std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }
 
 } catch (std::exception const& e) {
-    std::cout << "Exception was thrown in function: " << e.what() << std::endl;
+    DEBUG_LOG("Exception was thrown in function: " << e.what());
 } catch (...) {
-    std::cout << "Unhandled exception" << std::endl;
+    DEBUG_LOG("Unhandled exception");
 }

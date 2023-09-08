@@ -30,6 +30,7 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 # conan_basic_setup(TARGETS)
 conan_cmake_run(REQUIRES rapidjson/cci.20220822@ 
                          boost/1.83.0@
+                         logger/0.0.4@maratnek/testing
                         #  benchmark/1.6.0@ 
                         #  leveldb/1.23@
                         #  protobuf/3.21.12@
@@ -48,8 +49,8 @@ conan_cmake_run(REQUIRES rapidjson/cci.20220822@
 )
 
 find_package(RapidJSON REQUIRED)
-# find_package(Boost 1.83 REQUIRED COMPONENTS system)
 find_package(Boost 1.83 REQUIRED COMPONENTS system)
+find_package(logger REQUIRED)
 
 # find_package(Protobuf REQUIRED)
 # set(PROTO_FILES
@@ -79,6 +80,7 @@ add_executable(p2p-test
 target_link_libraries(p2p-test 
         CONAN_PKG::rapidjson
         CONAN_PKG::boost
+        CONAN_PKG::logger
 )
 
 add_executable(client-test 
@@ -89,4 +91,5 @@ add_executable(client-test
 target_link_libraries(client-test 
         CONAN_PKG::rapidjson
         CONAN_PKG::boost
+        CONAN_PKG::logger
 )

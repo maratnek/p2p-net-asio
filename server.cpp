@@ -1,44 +1,67 @@
 #include "server.hpp"
 #include "session.hpp"
 
+Server::Server(const std::string &address, unsigned short port)
+    : m_address(address)
+    , m_port(port)
+    , m_acceptor(m_io_context, tcp::endpoint(tcp::v4(), port))
+{
+    DEBUG_LOG("Initializing server");
+    m_acceptor.listen(m_port);
+    accept();
+}
+
+Server::~Server()
+{
+    DEBUG_LOG("~Server destructed");
+    if (m_thread.joinable())
+    {
+        DEBUG_LOG("Stop context and Join thread");
+        m_io_context.stop();
+        m_thread.join();
+    }
+}
+
 void Server::addReceiveHandler(std::function<void(std::string message)> lamda)
 {
-    if (lamda != nullptr) {
-      std::cout << "Add receive handler" << std::endl;
-      m_receiveHandler = lamda;
+    TRACE_FUNCTION
+    if (lamda != nullptr)
+    {
+        DEBUG_LOG("Add receive handler");
+        m_receiveHandler = lamda;
     }
 }
 
 void Server::runServer()
 {
-    std::cout << "Running... " << std::endl;
-    auto t = std::thread([this]() {
+    DEBUG_LOG("Running... ");
+    auto t = std::thread([this]()
+                         {
       for (;;) {
         try {
-          std::cout << "Server run " << m_port << std::endl;
+          DEBUG_LOG("Server run " << m_port);
           m_io_context.run();
-          std::cout << "Run exited" << std::endl;
+          DEBUG_LOG("Run exited");
           break; // run() exited normally
         } catch (std::exception &e) {
           // Deal with exception as appropriate.
-          std::cerr << "Failed run context: " << e.what() << std::endl;
+          ERROR_LOG("Failed run context: " << e.what());
         }
-      }
-    });
+      } });
     std::swap(m_thread, t);
 }
 
 void Server::removeSession(std::shared_ptr<Session> session)
 {
     std::lock_guard<std::mutex> lock(m_sessionMutex);
-    std::cout << "Removing session !!!" << std::endl;
+    DEBUG_LOG("Removing session !!!");
     m_sessions_conn.remove(session);
     m_sessions_accept.remove(session);
 }
 
 void Server::sendToAll(std::string const &message)
 {
-    std::cout << "Conn Sessions size before send messages: " << m_sessions_conn.size() << std::endl;
+    DEBUG_LOG("Conn Sessions size before send messages: " << m_sessions_conn.size());
     for (auto &session : m_sessions_conn)
     {
         session->sendMessage(message);
@@ -47,7 +70,7 @@ void Server::sendToAll(std::string const &message)
 
 void Server::sendToAllAccepter(std::string const &message)
 {
-    std::cout << "Accepter Sessions size before send messages: " << m_sessions_accept.size() << std::endl;
+    DEBUG_LOG("Accepter Sessions size before send messages: " << m_sessions_accept.size());
     for (auto &session : m_sessions_accept)
     {
         session->sendMessage(message);
@@ -56,7 +79,7 @@ void Server::sendToAllAccepter(std::string const &message)
 
 void Server::connect(const std::string &targetAddress, short unsigned targetPort)
 {
-    std::cout << "------------CONNECT------------" << std::endl;
+    DEBUG_LOG("------------CONNECT------------");
     auto &socket = m_sockets.emplace_back(m_acceptor.get_executor());
 
     boost::asio::ip::tcp::endpoint endpoint(
@@ -71,11 +94,11 @@ void Server::connect(const std::string &targetAddress, short unsigned targetPort
 
           std::lock_guard<std::mutex> lock(m_sessionMutex);
           m_sessions_conn.emplace_back(session);
-          std::cout << "Success Connected to server (port: " << targetPort << ")"
-                    << " list conn s: " << m_sessions_conn.size() << std::endl;
+          DEBUG_LOG("Success Connected to server (port: " << targetPort << ")"
+                    << " list conn s: " << m_sessions_conn.size());
       } else {
-        std::cout << "Failed to connect to (port: " << targetPort << ")"
-                  << ": " << ec.message() << std::endl;
+        DEBUG_LOG("Failed to connect to (port: " << targetPort << ")"
+                  << ": " << ec.message());
       } });
 }
 
@@ -86,7 +109,7 @@ void Server::accept()
         {
             if (!ec)
             {
-                std::cout << "------------ACCEPT------------" << std::endl;
+                DEBUG_LOG("------------ACCEPT------------");
                 auto endpoint = socket.remote_endpoint();
                 auto lendp = socket.local_endpoint();
 
@@ -100,16 +123,16 @@ void Server::accept()
                 }
                 session->start(); // Start the session here
 
-                std::cout << "Accepted connection from remote endp: " << endpoint.address()
-                          << ":" << endpoint.port() << " local endpoint: " << lendp.port()
-                          << " list s: " << m_sessions_accept.size() << std::endl;
+                DEBUG_LOG("Accepted connection from remote endp: " << endpoint.address()
+                                                                   << ":" << endpoint.port() << " local endpoint: " << lendp.port()
+                                                                   << " list s: " << m_sessions_accept.size());
 
                 // Log remote endpoint information again to double-check
-                std::cout << "Remote endpoint after accepting: " << session->getRemoteEndpoint() << std::endl;
+                DEBUG_LOG("Remote endpoint after accepting: " << session->getRemoteEndpoint());
             }
             else
             {
-                std::cout << "Error accepting connection: " << ec.message() << std::endl;
+                DEBUG_LOG("Error accepting connection: " << ec.message());
             }
 
             accept(); // Continue accepting connections

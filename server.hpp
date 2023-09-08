@@ -9,6 +9,9 @@
 #include <thread>
 #include <mutex>
 
+#include <logger.hpp>
+using namespace logger;
+
 using namespace std::chrono_literals;
 using boost::asio::ip::tcp;
 
@@ -17,31 +20,19 @@ class Session;
 /// \class Server consisting of sessions with connection
 /// \
 
-class Server {
-    Server() = delete; //
-    Server(Server const &) = delete; //
+class Server
+{
+  Server() = delete;               //
+  Server(Server const &) = delete; //
 public:
-  Server(const std::string &address, unsigned short port)
-      : m_address(address)
-      , m_port(port)
-      , m_acceptor(m_io_context, tcp::endpoint(tcp::v4(), port))
-  {
-      m_acceptor.listen(m_port);
-      accept();
-  }
 
-  ~Server() {
-    std::cout << "Server destructed" << std::endl;
-    if (m_thread.joinable()) {
-      std::cout << "Stop context and Join thread" << std::endl;
-      m_io_context.stop();
-      m_thread.join(); 
-    }
-  }
+  Server(const std::string &address, unsigned short port);
+
+  ~Server();
 
   void runServer();
 
-  void sendToAll(std::string const &message); 
+  void sendToAll(std::string const &message);
 
   void sendToAllAccepter(std::string const &message);
 
@@ -70,8 +61,6 @@ private:
   std::thread m_thread;
 
   std::function<void(std::string message)> m_receiveHandler = nullptr;
-
 };
-
 
 #endif // __SERVER__HPP__

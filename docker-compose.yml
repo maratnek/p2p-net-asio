@@ -14,8 +14,6 @@ services:
     ports:
       - 5555:5555
     network_mode: host
-    # networks:
-      # - my_network
   node2:
     image: 'ubuntu:latest'
     volumes:
@@ -29,8 +27,6 @@ services:
     # depends_on:
       # - node1
     network_mode: host
-    # networks:
-      # - my_network
     # build:
     #   context: .
     #   dockerfile: Dockerfile
@@ -59,5 +55,3 @@ services:
   #     dockerfile: Dockerfile
   #   command: ["./node", "config_node4.json"]
 
-# networks:
-  # my_network:

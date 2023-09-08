@@ -20,7 +20,7 @@ namespace config
             std::ifstream file(filename);
             if (!file.is_open())
             {
-                std::cerr << "Error opening config file: " << filename << std::endl;
+                ERROR_LOG("Error opening config file: " << filename);
             }
 
             rapidjson::IStreamWrapper isw(file);

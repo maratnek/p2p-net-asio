@@ -1,14 +1,26 @@
 #include "server.hpp"
 #include "config.hpp"
 
+#include <exception>
+
+#include <logger.hpp>
+using namespace logger;
+
 int main(int argc, char** argv) try {
+
+    Logger::initialize();
+    // Logger::setLogLevel(LogLevel::INFO);
+
+    TRACE_LOG("Client test started");
 
     std::string address = "127.0.0.1";
     std::string sPort = "5000";
     std::string node = "1";
 
     if (argc != 2) {
-        throw std::runtime_error("Execute parameter must be two arguments.Configuration");
+        const char* err = "Execute parameter must be two arguments.Configuration";
+        ERROR_LOG(err);
+        throw std::runtime_error(err);
     }
 
     auto conf = std::make_shared<config::Configuration>(argv[1]);
@@ -16,7 +28,7 @@ int main(int argc, char** argv) try {
     std::map<std::string, std::string> config = conf->getMainConfig();
     for (const auto &pair : config)
     {
-        std::cout << pair.first << ": " << pair.second << std::endl;
+        DEBUG_LOG(pair.first << ": " << pair.second);
     }
     if (config.contains("Address"))
     {
@@ -28,7 +40,7 @@ int main(int argc, char** argv) try {
     }
     
     uint16_t const port = argc > 1 ? atoi(sPort.c_str()) : 5000;
-    std::cout << "listening port: " << port << std::endl;
+    DEBUG_LOG("listening port: " << port);
 
     Server server("127.0.0.1", port);
     server.runServer();
@@ -36,7 +48,7 @@ int main(int argc, char** argv) try {
     auto targetAddress = "127.0.0.1";
     auto targetPort = 5555+50;
 
-    std::cout << "Connecting..." << std::endl;
+    DEBUG_LOG("Connecting...");
     server.connect(targetAddress, targetPort);
 
     std::this_thread::sleep_for(std::chrono::seconds(2)); // Wait for a moment
@@ -47,17 +59,14 @@ int main(int argc, char** argv) try {
         server.sendToAll("Id: " + std::to_string(i) + " Hello from Client with port :" + sPort + "!");
     }
 
-    
-    // auto counter = 0;
+    // TODO block main thread until (in the future start context in the main thread)
     while (true) {
-    //     server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
-        // server.sendToAll("Id: " + std::to_string(counter++) + " Hello from Client with port :" + sPort + "!");
         std::this_thread::sleep_for(std::chrono::seconds(3));
     //     std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }
 
 } catch (std::exception const& e) {
-    std::cout << "Exception was thrown in function: " << e.what() << std::endl;
+    ERROR_LOG("Exception was thrown in function: " << e.what());
 } catch (...) {
-    std::cout << "Unhandled exception" << std::endl;
+    ERROR_LOG("Unhandled exception");
 }
