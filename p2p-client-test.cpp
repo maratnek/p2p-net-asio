@@ -1,5 +1,10 @@
 #include "server.hpp"
 #include "config.hpp"
+#include "session.hpp"
+
+// #include "net-manager.hpp"
+
+#include "event.hpp"
 
 #include <logger.hpp>
 using namespace logger;
@@ -43,19 +48,34 @@ int main(int argc, char** argv) try {
     Server p2p_server("127.0.0.1", port);
     Server clinets_server("127.0.0.1", port + 50);
 
+
+
     int id = 0;
 
-    clinets_server.addReceiveHandler([&](std::string mes){
+    // Network manager, handle events, router
+    // NetManager net_manager(p2p_server, clinets_server);
+
+    clinets_server.addReceiveHandler([&](std::shared_ptr<Session> resSession, std::string mes){
         DEBUG_LOG("Client send message!!! " << mes);
         clinets_server.sendToAllAccepter("PING FROM SERVER");
         // handle the message and send it to all peers
         p2p_server.sendToAll("SEND TO ALL: " + mes);
     });
 
-    p2p_server.addReceiveHandler([&](std::string mes) {
+    // EventHandler eventHandler;
+    p2p_server.addReceiveHandler([&](std::shared_ptr<Session> resSession, std::string mes) {
         DEBUG_LOG("Client send message from P2P!!! " << mes);
         // send the response to client if p2p server receive message
-        clinets_server.sendToAllAccepter("RECEIVE RESPONSE from p2p server: " + mes);
+
+        // eventHandler.receiveAndHandleEvent(mes);
+        if (mes.find("Answered") == std::string::npos) {
+            DEBUG_LOG("Answered from server: " << resSession->getAddress());
+            resSession->sendMessage("Answered from server: " + std::to_string(resSession->getAddress()));
+        } else {
+            // then send to client
+            clinets_server.sendToAllAccepter("ANSWER from peers " +  std::to_string(resSession->getAddress()));
+        }
+
     });
 
     p2p_server.runServer();
