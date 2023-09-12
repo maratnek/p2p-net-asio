@@ -14,6 +14,7 @@ public:
 private:
     Server& m_p2pServer;
     Server& m_client;
+    EventHandler m_eventHandler;
 };
 
 

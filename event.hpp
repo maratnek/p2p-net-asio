@@ -101,7 +101,7 @@ void handleSystemEvent(const events::Event &systemEventProto);
 
 class EventHandler {
 public:
-    void receiveAndHandleEvent(const std::string& message) {
+    void handleEvent(const std::string& message) {
         events::Event event;
         if (event.ParseFromString(message)) {
             auto it = m_eventHandlers.find(event.type());
@@ -122,14 +122,12 @@ public:
         // std::cout << "Sending event over the network: " << serializedEvent << std::endl;
     }
 
-
-// // Define a mapping from event type to handler function
-std::unordered_map<events::EventType, void (*)(const events::Event&)> m_eventHandlers = {
-    // {events::EventType::USER_EVENT, handleUserEvent},
-    {events::EventType::SYSTEM_EVENT, handleSystemEvent}
-    // Add more event types and handlers as needed
-};
-
+    // Define a mapping from event type to handler function
+    std::unordered_map<events::EventType, void (*)(const events::Event &)> m_eventHandlers = {
+        // {events::EventType::USER_EVENT, handleUserEvent},
+        {events::EventType::SYSTEM_EVENT, handleSystemEvent}
+        // Add more event types and handlers as needed
+    };
 };
 
 #endif // __EVENT_HPP__
