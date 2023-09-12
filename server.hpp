@@ -17,6 +17,10 @@ using boost::asio::ip::tcp;
 
 class Session;
 
+using TAddress = uint32_t;
+using TReceiveHandler = std::function<void(std::shared_ptr<Session> responseSession, std::string message)>;
+
+
 /// \class Server consisting of sessions with connection
 /// \
 
@@ -34,9 +38,11 @@ public:
 
   void sendToAll(std::string const &message);
 
+  void sendByAddress(TAddress address, std::string const &message);
+
   void sendToAllAccepter(std::string const &message);
 
-  void addReceiveHandler(std::function<void(std::string message)> lamda);
+  void addReceiveHandler(TReceiveHandler lamda);
 
   void removeSession(std::shared_ptr<Session> session);
 
@@ -60,7 +66,7 @@ private:
 
   std::thread m_thread;
 
-  std::function<void(std::string message)> m_receiveHandler = nullptr;
+  TReceiveHandler m_receiveHandler = nullptr;
 };
 
 #endif // __SERVER__HPP__

@@ -31,10 +31,9 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 conan_cmake_run(REQUIRES rapidjson/cci.20220822@ 
                          boost/1.83.0@
                          logger/0.0.4@maratnek/testing
+                         protobuf/3.21.12@
                         #  benchmark/1.6.0@ 
                         #  leveldb/1.23@
-                        #  protobuf/3.21.12@
-                        #  spdlog/1.12.0@
                         # poco/1.9.4@
         # OPTIONS Poco::building=True
         GENERATORS cmake cmake_multi cmake_find_package cmake_find_package_multi cmake_paths 
@@ -52,13 +51,13 @@ find_package(RapidJSON REQUIRED)
 find_package(Boost 1.83 REQUIRED COMPONENTS system)
 find_package(logger REQUIRED)
 
-# find_package(Protobuf REQUIRED)
-# set(PROTO_FILES
-#        proto/data.proto
-#        )
+find_package(Protobuf REQUIRED)
+set(PROTO_FILES
+       proto/events.proto
+       )
 
-# include_directories(${CMAKE_CURRENT_BINARY_DIR})
-# protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 # add_executable(processing 
 #        main.cpp 
@@ -75,21 +74,28 @@ add_executable(p2p-test
         p2p-client-test.cpp
         session.cpp
         server.cpp
+        net-manager.cpp
+        event.cpp
+        ${PROTO_SRCS}
 )
 
 target_link_libraries(p2p-test 
         CONAN_PKG::rapidjson
         CONAN_PKG::boost
         CONAN_PKG::logger
+        CONAN_PKG::protobuf
 )
 
 add_executable(client-test 
         client-test.cpp
         session.cpp
         server.cpp
+        event.cpp
+        ${PROTO_SRCS}
 )
 target_link_libraries(client-test 
         CONAN_PKG::rapidjson
         CONAN_PKG::boost
         CONAN_PKG::logger
+        CONAN_PKG::protobuf
 )

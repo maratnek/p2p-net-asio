@@ -22,7 +22,7 @@ Server::~Server()
     }
 }
 
-void Server::addReceiveHandler(std::function<void(std::string message)> lamda)
+void Server::addReceiveHandler(TReceiveHandler lamda)
 {
     TRACE_FUNCTION
     if (lamda != nullptr)
@@ -68,6 +68,17 @@ void Server::sendToAll(std::string const &message)
     }
 }
 
+void Server::sendByAddress(TAddress address, std::string const &message)
+{
+    for (auto &session : m_sessions_conn)
+    {
+        if (session->getAddress() == address) {
+            DEBUG_LOG("Send message by address " << address);
+            session->sendMessage(message);
+        }
+    }
+}
+
 void Server::sendToAllAccepter(std::string const &message)
 {
     DEBUG_LOG("Accepter Sessions size before send messages: " << m_sessions_accept.size());
@@ -88,7 +99,8 @@ void Server::connect(const std::string &targetAddress, short unsigned targetPort
     socket.async_connect(endpoint, [this, targetPort, &socket](boost::system::error_code ec)
                          {
       if (!ec) {
-          auto session = std::make_shared<Session>(std::move(socket), *this);
+          TAddress addr = targetPort;
+          auto session = std::make_shared<Session>(std::move(socket), addr, *this);
           session->addReceiveHandler(m_receiveHandler);
           session->start();
 
@@ -113,7 +125,8 @@ void Server::accept()
                 auto endpoint = socket.remote_endpoint();
                 auto lendp = socket.local_endpoint();
 
-                auto session = std::make_shared<Session>(std::move(socket), *this);
+                TAddress addr = endpoint.port();
+                auto session = std::make_shared<Session>(std::move(socket), addr, *this);
 
                 session->addReceiveHandler(m_receiveHandler);
 

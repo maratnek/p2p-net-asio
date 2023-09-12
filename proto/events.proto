@@ -1,0 +1,55 @@
+// events.proto
+
+syntax = "proto3";
+
+package events;
+
+
+enum UserType {
+    CREATE_WALLET = 0;
+    TRANSACTIOIN = 1;
+    // Add more event types as needed
+}
+
+// event
+message UserEvent {
+    string uuid = 1;
+    UserType type = 2;
+    oneof event {
+        CreateWallet create_wallet = 3;
+        Transaction transaction = 4;
+    }
+}
+
+message CreateWallet {
+    uint32 ID = 1;
+    uint32 amount = 2;
+    string certificate = 3;
+}
+
+message Transaction {
+    uint32 ID1 = 1;
+    uint32 ID2 = 2;
+    uint32 amount = 3;
+    string signature = 4;
+}
+
+// event
+message SystemEvent {
+    string message = 1;
+}
+
+// Enum to represent different event types
+enum EventType {
+    USER_EVENT = 0;
+    SYSTEM_EVENT = 1;
+    // Add more event types as needed
+}
+
+message Event {
+    EventType type = 1;
+    oneof event {
+        UserEvent user_event = 2;
+        SystemEvent system_event = 3;
+    }
+}

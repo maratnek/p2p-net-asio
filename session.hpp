@@ -20,8 +20,12 @@ constexpr char cDelimiter = '\n';
 /// \class Session
 class Session : public std::enable_shared_from_this<Session> {
 public:
-  Session(tcp::socket socket, Server &server)
-      : m_socket(std::move(socket)), m_receiveBuffer(1024), m_server(server) {}
+  Session(tcp::socket socket, TAddress address, Server &server)
+      : m_socket(std::move(socket))
+      , m_receiveBuffer(1024)
+      , m_server(server) 
+      , m_address(address)
+  {}
 
   // delete useless constructors
   Session() = delete;
@@ -40,7 +44,9 @@ public:
 
   /// @brief Subscribe to receive messages
   /// @param lamda funciton for subscription
-  void addReceiveHandler(std::function<void(std::string message)> lamda);
+  void addReceiveHandler(TReceiveHandler lamda);
+
+  inline TAddress getAddress() const { return m_address; }
 
 private:
   void handleRead(boost::system::error_code ec, std::size_t bytesTransferred);
@@ -52,7 +58,9 @@ private:
   tcp::socket m_socket;
   boost::asio::streambuf m_receiveBuffer;
 
-  std::function<void(std::string message)> m_receiveHandler = nullptr;
+  TReceiveHandler m_receiveHandler = nullptr;
+
+  TAddress m_address;
 };
 
 #endif // __SESSION__HPP__

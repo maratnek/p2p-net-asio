@@ -54,7 +54,7 @@ void Session::handleRead(boost::system::error_code ec,
     DEBUG_LOG("Node: Received: " << receivedMessage);
     if (m_receiveHandler != nullptr)
     {
-      m_receiveHandler(receivedMessage);
+      m_receiveHandler(shared_from_this(), receivedMessage);
     }
     receiving(); // Continue receiving
   }
@@ -78,7 +78,7 @@ void Session::handleRead(boost::system::error_code ec,
   }
 }
 
-void Session::addReceiveHandler(std::function<void(std::string message)> lamda)
+void Session::addReceiveHandler(TReceiveHandler lamda)
 {
   if (lamda != nullptr)
   {
