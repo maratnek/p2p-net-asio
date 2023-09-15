@@ -46,8 +46,6 @@ int main(int argc, char** argv) try {
     Server p2p_server("127.0.0.1", port);
     Server clinets_server("127.0.0.1", port + 50);
 
-
-
     int id = 0;
 
     // Network manager, handle events, router

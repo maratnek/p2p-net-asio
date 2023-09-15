@@ -30,7 +30,7 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 # conan_basic_setup(TARGETS)
 conan_cmake_run(REQUIRES rapidjson/cci.20220822@ 
                          boost/1.83.0@
-                         logger/0.0.4@maratnek/testing
+                         logger/0.1.0@maratnek/testing
                          protobuf/3.21.12@
                         #  benchmark/1.6.0@ 
                         #  leveldb/1.23@
@@ -57,6 +57,7 @@ set(PROTO_FILES
        )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+message(${PROTO_FILES})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 # add_executable(processing 

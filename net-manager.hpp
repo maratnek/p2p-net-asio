@@ -2,6 +2,7 @@
 #define __NET_MANAGER_HPP__
 
 #include "server.hpp"
+#include "event.hpp"
 
 class NetManager
 {

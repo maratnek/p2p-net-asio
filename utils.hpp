@@ -84,8 +84,8 @@ std::string createWalletMessage() {
     userEvent.set_type(userType);
 
     // Depending on the event type, generate the corresponding event message
+    events::CreateWallet createWallet;
     if (userType == events::CREATE_WALLET) {
-        events::CreateWallet createWallet;
         Wallet wallet = genRandWallet();
         createWallet.set_id(wallet.m_id);
         createWallet.set_amount(wallet.m_balance);

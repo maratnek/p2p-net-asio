@@ -10,7 +10,7 @@ using namespace logger;
 
 int main(int argc, char** argv) try {
 
-    Logger::initialize();
+    Logger::initialize("[%^%L%$][%H:%M:%S.%e] [%^%l%$] [File: %s] [Td: %t] %v");
     // Logger::setLogLevel(LogLevel::INFO);
 
     TRACE_LOG("Client test started");
@@ -57,8 +57,10 @@ int main(int argc, char** argv) try {
 
     for (size_t i = 0; i < 4; i++)
     {
+        std::string mes = utils::createWalletMessage();
         // TODO it should be send only to one Node
-        server.sendToAll("Id: " + std::to_string(i) + " Hello from Client with port :" + sPort + "!");
+        server.sendToAll(mes);
+        // server.sendToAll("Id: " + std::to_string(i) + " Hello from Client with port :" + sPort + "!");
     }
 
     // TODO block main thread until (in the future start context in the main thread)
