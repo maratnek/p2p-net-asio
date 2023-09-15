@@ -96,7 +96,7 @@ public:
         //                                   do_read(_socket); // Continue receiving
         //                               });
 
-        boost::asio::async_read(_socket, m_receiveBuffer, boost::asio::transfer_at_least(m_buffer_size),
+        boost::asio::async_read(_socket, m_receiveBuffer, boost::asio::transfer_at_least(1),
                                       [this, &_socket](boost::system::error_code ec, std::size_t bytesTransferred) mutable
                                       {
                                           std::cout << "------------lamda read------------" << std::endl;
@@ -110,6 +110,7 @@ public:
                                                   std::istream is(&m_receiveBuffer);
                                                   std::getline(is, receivedMessage);
                                                   lock.unlock();
+                                                  m_receiveBuffer.consume(bytesTransferred);
 
                                                   m_receiveCallback(receivedMessage);
                                                   std::cout << "Node: "
@@ -120,12 +121,12 @@ public:
                                                   std::cout << "Node: "
                                                             << "N Received O bytes " << std::endl;
                                               }
+                                              do_read(_socket); // Continue receiving
                                           }
                                           else
                                           {
                                               std::cout << "ERROR Node Er Val:" << ec.value() << ":" << ec.message() << std::endl;
                                           }
-                                          do_read(_socket); // Continue receiving
                                       });
 
         // _socket.async_read_some(boost::asio::buffer(m_buffer),
