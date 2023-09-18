@@ -179,7 +179,6 @@ public:
                                     std::cout << "Connected to server " << conn.remote_endpoint() << std::endl;
 
                                     std::string data = "Hello from node port is: " + std::to_string(m_port);
-                                    // do_write(conn, data);
                                     do_read(conn);
                                 }
                                 else

@@ -67,8 +67,10 @@ int main(int argc, char** argv) try {
 
     std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
 
-    while (true) {
-        server.do_write_all("Hello from node:" + sPort + "!\n");
+    // while (true) 
+    for (size_t i = 0; i < 10; i++)
+    {
+        server.do_write_all(std::to_string(i) + "Hello from node:" + sPort + "!\n");
         // std::this_thread::sleep_for(std::chrono::seconds(1));
         std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }

@@ -51,7 +51,8 @@ int main(int argc, char** argv) try {
     // }
     
     auto counter = 0;
-    while (true) {
+    // while (true) {
+    for (size_t i = 0; i < 10; i++)
         server.sendToAll(std::to_string(counter++) + " Hello from node:" + sPort + "!");
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         std::this_thread::sleep_for(std::chrono::nanoseconds(2));
