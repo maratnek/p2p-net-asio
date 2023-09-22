@@ -35,19 +35,19 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     # command: ["./build/bin/node-network", "config2.json"]
-  node3:
-    image: 'ubuntu:latest'
-    volumes:
-      - ./config3.json:/app/config.json
-      - ./build/bin/p2p-test:/app/p2p-test
-      # - ./config2.json:/app
-    # command: ls /app
-    command: ./app/p2p-test ./app/config.json
-    ports:
-      - 5557:5557
-    # depends_on:
-      # - node2
-    network_mode: host
+  # node3:
+  #   image: 'ubuntu:latest'
+  #   volumes:
+  #     - ./config3.json:/app/config.json
+  #     - ./build/bin/p2p-test:/app/p2p-test
+  #     # - ./config2.json:/app
+  #   # command: ls /app
+  #   command: ./app/p2p-test ./app/config.json
+  #   ports:
+  #     - 5557:5557
+  #   # depends_on:
+  #     # - node2
+  #   network_mode: host
   # node3:
   #   build:
   #     context: .

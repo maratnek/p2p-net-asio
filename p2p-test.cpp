@@ -65,14 +65,14 @@ int main(int argc, char** argv) try {
         std::cout << count++ << " Receive: " << msg << std::endl;
     });
 
-    std::this_thread::sleep_for(std::chrono::seconds(3)); // Wait for a moment
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for a moment
 
     // while (true) 
     for (size_t i = 0; i < 10; i++)
     {
-        server.do_write_all(std::to_string(i) + "Hello from node:" + sPort + "!\n");
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-        std::this_thread::sleep_for(std::chrono::nanoseconds(2));
+        server.do_write_all("_" + std::to_string(i) + " Hello from node:" + sPort + "!");
+        // std::this_thread::sleep_for(std::chrono::seconds(2));
+        // std::this_thread::sleep_for(std::chrono::nanoseconds(2));
     }
 
     t.join();
