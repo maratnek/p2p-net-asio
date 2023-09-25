@@ -1,9 +1,24 @@
 #include "p2p-node.hpp"
 #include "config.hpp"
+#include "tps-measure.hpp"
+
+#include "logger.hpp"
+using namespace logger;
 
 #include <csignal>
 
 #include <atomic>
+
+
+// TODO only test
+inline void artificialPayload()
+{
+    for (int i = 0; i < 1000; ++i)
+    {
+        double result = std::sqrt(static_cast<double>(i)) * std::log(static_cast<double>(i));
+        result = std::sin(result);
+    }
+}
 
     std::atomic<int> count = 0;
 
@@ -13,6 +28,12 @@ void signal_handler(int signal_num) {
     }
 
 int main(int argc, char** argv) try {
+
+    // Initialize Logger 
+    Logger::initialize();
+    Logger::setLogLevel(LogLevel::INFO);
+    TPSMeasuring tps_measure;
+
 
     std::string address = "127.0.0.1";
     std::string sPort = "5000";
@@ -61,14 +82,19 @@ int main(int argc, char** argv) try {
     // register signal SIGABRT and signal handler
     signal(SIGINT, signal_handler);
     
-    server.receive([](std::string msg){
-        std::cout << count++ << " Receive: " << msg << std::endl;
+    server.receive([&tps_measure](std::string msg){
+        // measuring tpsstd::to_string(count++)
+        tps_measure.StartTransaction();
+        artificialPayload();
+        INFO_LOG("Received: " << msg);
+        tps_measure.FinishTransaction();
+
     });
 
     std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for a moment
 
     // while (true) 
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < 10'000; i++)
     {
         server.do_write_all("_" + std::to_string(i) + " Hello from node:" + sPort + "!");
         // std::this_thread::sleep_for(std::chrono::seconds(2));

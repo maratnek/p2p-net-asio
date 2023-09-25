@@ -10,7 +10,6 @@
 #include "chat-message.hpp"
 
 #include <deque>
-
 typedef std::deque<chat_message> chat_message_queue;
 
 using namespace std::chrono_literals;

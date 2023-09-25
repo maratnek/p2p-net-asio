@@ -30,6 +30,7 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 # conan_basic_setup(TARGETS)
 conan_cmake_run(REQUIRES rapidjson/cci.20220822@ 
                          boost/1.83.0@
+                        logger/0.1.2@maratnek/testing
                         #  benchmark/1.6.0@ 
                         #  leveldb/1.23@
                         #  protobuf/3.21.12@
@@ -88,6 +89,7 @@ add_executable(p2p-test p2p-test.cpp)
 target_link_libraries(p2p-test 
         CONAN_PKG::rapidjson
         CONAN_PKG::boost
+        CONAN_PKG::logger
 )
 # target_compile_options(my_program PRIVATE -fsanitize=address)
 # target_link_libraries(my_program PRIVATE -fsanitize=address)
