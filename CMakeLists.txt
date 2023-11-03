@@ -14,7 +14,7 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 # set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 # set(CMAKE_GENERATOR Xcode)
-#set(CONAN_DISABLE_CHECK_COMPILER ON)
+# set(CONAN_DISABLE_CHECK_COMPILER ON)
 
 
 # Download automatically, you can also just copy the conan.cmake file
@@ -52,6 +52,9 @@ find_package(RapidJSON REQUIRED)
 # find_package(Boost 1.83 REQUIRED COMPONENTS system)
 find_package(Boost 1.83 REQUIRED COMPONENTS system)
 
+# target_compile_options(my_program PRIVATE -fsanitize=address)
+# target_link_libraries(my_program PRIVATE -fsanitize=address)
+
 # find_package(Protobuf REQUIRED)
 # set(PROTO_FILES
 #        proto/data.proto
@@ -60,30 +63,7 @@ find_package(Boost 1.83 REQUIRED COMPONENTS system)
 # include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
-# add_executable(processing 
-#        main.cpp 
-#        ${PROTO_SRCS}
-# )
-
-# target_link_libraries(processing 
-#        CONAN_PKG::leveldb 
-#        CONAN_PKG::protobuf
-#        CONAN_PKG::spdlog 
-# )
-
-# test leveldb
 message(${PROJECT_NAME})
-# add_executable(${PROJECT_NAME} node-network.cpp)
-add_executable(${PROJECT_NAME} node-network2.cpp)
-target_link_libraries(${PROJECT_NAME} 
-        CONAN_PKG::rapidjson
-        CONAN_PKG::boost
-)
-
-add_executable(echo-server echo-server.cpp)
-target_link_libraries(echo-server 
-        CONAN_PKG::boost
-)
 
 add_executable(p2p-test p2p-test.cpp)
 target_link_libraries(p2p-test 
@@ -91,20 +71,6 @@ target_link_libraries(p2p-test
         CONAN_PKG::boost
         CONAN_PKG::logger
 )
-# target_compile_options(my_program PRIVATE -fsanitize=address)
-# target_link_libraries(my_program PRIVATE -fsanitize=address)
-
-# add_executable(p2p-test p2p-test2.cpp)
-# target_link_libraries(p2p-test 
-#         CONAN_PKG::rapidjson
-#         CONAN_PKG::boost
-# )
-
-# add_executable(p2p-test p2p-client-test.cpp)
-# target_link_libraries(p2p-test 
-#         CONAN_PKG::rapidjson
-#         CONAN_PKG::boost
-# )
 
 
 add_executable(client-test client-test.cpp)

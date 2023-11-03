@@ -48,5 +48,5 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> lastLogTime_;
     std::chrono::time_point<std::chrono::steady_clock> transactionStartTime_;
     int transactionId_; // Unique ID for each transaction
-    const int LOG_INTERVAL_SECONDS = 5; // Adjust as needed
+    const int LOG_INTERVAL_SECONDS = 1; // Adjust as needed
 };
