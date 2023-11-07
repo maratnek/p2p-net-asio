@@ -10,6 +10,7 @@
 #include <rapidjson/writer.h>
 
 #include <logger.hpp>
+using namespace logger;
 
 namespace config
 {
@@ -17,17 +18,7 @@ namespace config
     class Configuration
     {
     public:
-        Configuration(const std::string &filename)
-        {
-            std::ifstream file(filename);
-            if (!file.is_open())
-            {
-                ERROR_LOG("Error opening config file: " << filename);
-            }
-
-            rapidjson::IStreamWrapper isw(file);
-            m_document.ParseStream(isw);
-        }
+        Configuration(const std::string &filename);
 
         std::map<std::string, std::string>
         getMainConfig() const

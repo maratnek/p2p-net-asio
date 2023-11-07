@@ -23,8 +23,6 @@ using boost::asio::ip::tcp;
 /// \class Session
 class Session : public std::enable_shared_from_this<Session> {
 
-  const char cDelimiter = '\n';
-
 public:
   Session(tcp::socket socket, TAddress address, Server &server)
       : m_socket(std::move(socket))

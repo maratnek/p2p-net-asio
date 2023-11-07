@@ -1,36 +1,46 @@
 version: '3'
 services:
   node1:
-    image: 'ubuntu:latest'
+    image: 'p2pnetasio:latest'
     # build:
       # context: ./
     #   dockerfile: Dockerfile
     volumes:
       - ./config1.json:/app/config.json
       - ./build/bin/p2p-test:/app/p2p-test
+      - ./start.sh:/start.sh
       # - ./config2.json:/app
     # command: ls /app
-    command: ./app/p2p-test ./app/config.json
+    command: bash start.sh 
+    # command: ./app/p2p-test ./app/config.json
+    # command: "tc qdisc add dev eth0 root tbf rate 1mbit burst 10kb latency 500ms && ./app/p2p-test ./app/config.json"
+    privileged: true
     ports:
       - 5555:5555
-    network_mode: host
-    # networks:
-      # - my_network
+    # network_mode: host
+    networks:
+      custom_network:
+        ipv4_address: 172.18.0.2
   node2:
-    image: 'ubuntu:latest'
+    image: 'p2pnetasio:latest'
     volumes:
       - ./config2.json:/app/config.json
       - ./build/bin/p2p-test:/app/p2p-test
+      - ./start.sh:/start.sh
       # - ./config2.json:/app
     # command: ls /app
-    command: ./app/p2p-test ./app/config.json
+    command: bash start.sh 
+    # command: ./app/p2p-test ./app/config.json
+    # command: "tc qdisc add dev eth0 root tbf rate 1mbit burst 10kb latency 500ms && ./app/p2p-test ./app/config.json"
+    privileged: true
     ports:
       - 5556:5556
     # depends_on:
       # - node1
-    network_mode: host
-    # networks:
-      # - my_network
+    # network_mode: host
+    networks:
+      custom_network:
+        ipv4_address: 172.18.0.3
     # build:
     #   context: .
     #   dockerfile: Dockerfile
@@ -59,5 +69,9 @@ services:
   #     dockerfile: Dockerfile
   #   command: ["./node", "config_node4.json"]
 
-# networks:
-  # my_network:
+networks:
+  custom_network:
+    driver: bridge 
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16

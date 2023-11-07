@@ -22,25 +22,6 @@ void Session::handleWrite(std::string const &mes, boost::system::error_code ec,
   }
 };
 
-// void Session::sendMessage(std::string mes)
-// {
-//   auto self(shared_from_this());
-//   if (!m_socket.is_open())
-//   {
-//     ERROR_LOG("Socket closed");
-//     return;
-//   }
-
-//   TRACE_LOG("Socket is open");
-//   TRACE_LOG("Sending: remote endpoint " << m_socket.remote_endpoint());
-
-//   // boost::asio::async_write(m_socket, boost::asio::buffer(mes + cDelimiter),
-//   boost::asio::async_write(m_socket, boost::asio::buffer(mes),
-//                            std::bind(&Session::handleWrite, this, mes,
-//                                      std::placeholders::_1,
-//                                      std::placeholders::_2));
-// }
-
 void Session::sendMessage(std::string mes)
 {
   message msg;

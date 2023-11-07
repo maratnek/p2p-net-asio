@@ -4,10 +4,6 @@ project(node-network VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_REQUIRED ON)
 
-include(CTest)
-enable_testing()
-
-
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
@@ -49,8 +45,8 @@ conan_cmake_run(REQUIRES rapidjson/cci.20220822@
 )
 
 find_package(RapidJSON REQUIRED)
-# find_package(Boost 1.83 REQUIRED COMPONENTS system)
 find_package(Boost 1.83 REQUIRED COMPONENTS system)
+find_package(logger REQUIRED)
 
 # target_compile_options(my_program PRIVATE -fsanitize=address)
 # target_link_libraries(my_program PRIVATE -fsanitize=address)
@@ -65,16 +61,7 @@ find_package(Boost 1.83 REQUIRED COMPONENTS system)
 
 message(${PROJECT_NAME})
 
-add_executable(p2p-test p2p-test.cpp)
-target_link_libraries(p2p-test 
-        CONAN_PKG::rapidjson
-        CONAN_PKG::boost
-        CONAN_PKG::logger
-)
-
-
-add_executable(client-test client-test.cpp)
-target_link_libraries(client-test 
-        CONAN_PKG::rapidjson
-        CONAN_PKG::boost
-)
+add_subdirectory(utils)
+add_subdirectory(net)
+add_subdirectory(client)
+add_subdirectory(server)
