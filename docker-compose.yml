@@ -2,18 +2,11 @@ version: '3'
 services:
   node1:
     image: 'p2pnetasio:latest'
-    # build:
-      # context: ./
-    #   dockerfile: Dockerfile
     volumes:
       - ./config1.json:/app/config.json
       - ./build/bin/p2p-test:/app/p2p-test
       - ./start.sh:/start.sh
-      # - ./config2.json:/app
-    # command: ls /app
     command: bash start.sh 
-    # command: ./app/p2p-test ./app/config.json
-    # command: "tc qdisc add dev eth0 root tbf rate 1mbit burst 10kb latency 500ms && ./app/p2p-test ./app/config.json"
     privileged: true
     ports:
       - 5555:5555
@@ -27,24 +20,28 @@ services:
       - ./config2.json:/app/config.json
       - ./build/bin/p2p-test:/app/p2p-test
       - ./start.sh:/start.sh
-      # - ./config2.json:/app
-    # command: ls /app
     command: bash start.sh 
-    # command: ./app/p2p-test ./app/config.json
-    # command: "tc qdisc add dev eth0 root tbf rate 1mbit burst 10kb latency 500ms && ./app/p2p-test ./app/config.json"
     privileged: true
     ports:
       - 5556:5556
-    # depends_on:
-      # - node1
-    # network_mode: host
     networks:
       custom_network:
         ipv4_address: 172.18.0.3
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    # command: ["./build/bin/node-network", "config2.json"]
+
+  # node3:
+  #   image: 'p2pnetasio:latest'
+  #   volumes:
+  #     - ./config2.json:/app/config.json
+  #     - ./build/bin/p2p-test:/app/p2p-test
+  #     - ./start.sh:/start.sh
+  #   command: bash start.sh 
+  #   privileged: true
+  #   ports:
+  #     - 5556:5556
+  #   networks:
+  #     custom_network:
+  #       ipv4_address: 172.18.0.4
+
   # node3:
   #   image: 'ubuntu:latest'
   #   volumes:
@@ -58,20 +55,10 @@ services:
   #   # depends_on:
   #     # - node2
   #   network_mode: host
-  # node3:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   command: ["./node", "config_node3.json"]
-  # node4:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   command: ["./node", "config_node4.json"]
 
 networks:
   custom_network:
     driver: bridge 
-    ipam:
-      config:
-        - subnet: 172.18.0.0/16
+    # ipam:
+    #   config:
+    #     - subnet: 172.18.0.0/16

@@ -7,6 +7,8 @@
 using namespace logger;
 
 #include <csignal>
+#include <unordered_map>
+#include <chrono>
 
 #include <atomic>
 
@@ -21,6 +23,30 @@ inline void artificialPayload()
 }
 
 std::atomic<int> count = 0;
+// delay average
+std::atomic<double> avg = 0;
+
+std::unordered_map<std::size_t, std::chrono::time_point<std::chrono::steady_clock>> tpSet{10000};
+std::mutex tpSetMutex;
+
+void startTimer(size_t id) {
+    std::lock_guard<std::mutex> lock(tpSetMutex);
+    tpSet[id] = std::chrono::steady_clock::now();
+}
+
+
+auto finishTimer(size_t id) {
+    std::lock_guard<std::mutex> lock(tpSetMutex);
+    auto it = tpSet.find(id);
+    if (it != tpSet.end()) {
+        auto transactionEndTime = std::chrono::steady_clock::now();
+        auto transactionDuration = std::chrono::duration_cast<std::chrono::microseconds>(transactionEndTime - it->second);
+        INFO_LOG("Message responce " << id << ": Duration: "<< transactionDuration.count() << " microseconds");
+        return transactionDuration.count();
+    }
+    return static_cast<long int>(avg);
+}
+
 
 void signal_handler(int signal_num) {
         std::cout << "Receive message: " << count << std::endl;
@@ -77,12 +103,24 @@ int main(int argc, char** argv) try {
     // register signal SIGABRT and signal handler
     signal(SIGINT, signal_handler);
     
-    p2pServ.addReceiveHandler([&tps_measure](Session* session, std::string msg){
+    p2pServ.addReceiveHandler([](Session* session, std::string msg){
         // measuring tps std::to_string(count++)
-        tps_measure.StartTransaction();
-        artificialPayload();
-        INFO_LOG("Received: " << msg);
-        tps_measure.FinishTransaction();
+        // INFO_LOG("Received: " << msg);
+        if (!msg.empty()) {
+            try
+            {
+                auto const id = atoi(msg.c_str());
+                auto delay = finishTimer(id);
+                avg = (avg + delay)/2;
+                INFO_LOG("average is: " << avg);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << " atoi failed " <<  '\n';
+            }
+            
+        }
+        // artificialPayload();
 
     });
 
@@ -92,9 +130,10 @@ int main(int argc, char** argv) try {
 
     std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for a moment
 
-    for (size_t i = 0; i < 10000; i++)
+    for (size_t i = 0; i < 10'000; i++)
     {
-        p2pServ.sendToAll("_" + std::to_string(i) + " Hello from node:" + sPort + "!");
+        startTimer(i);
+        p2pServ.sendToAll(std::to_string(i));
         // std::this_thread::sleep_for(std::chrono::seconds(1));
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
